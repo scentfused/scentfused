@@ -1,0 +1,952 @@
+import React, { useState, useMemo } from 'react';
+import { 
+  ShoppingBag, Heart, Search, X, ChevronRight, Star, 
+  Filter, Sparkles, Check, ArrowRight, ShieldCheck, Truck, RefreshCw, Menu
+} from 'lucide-react';
+
+// --- MOCK DATABASE ---
+const PRODUCTS = [
+  {
+    id: 'aethel-oud',
+    name: 'Aethel Oud',
+    tagline: 'Smoky Amber & Imperial Assam Oud',
+    price50: 240,
+    price100: 380,
+    gender: 'Unisex',
+    family: 'Woody',
+    notes: {
+      top: ['Cardamom', 'Bergamot', 'Pink Pepper'],
+      heart: ['Assam Oud', 'Taif Rose', 'Incense'],
+      base: ['Smokey Amber', 'Sandalwood', 'Musk']
+    },
+    description: 'A deeply hypnotic fragrance capturing the ethereal mist over ancient royal forests. Distilled using rare 30-year-aged Assam Oud combined with warm, resinous amber.',
+    liquidColor: '#d4af37',
+    rating: 4.9,
+    reviewsCount: 128,
+    isNew: true
+  },
+  {
+    id: 'solaris-bloom',
+    name: 'Solaris Bloom',
+    tagline: 'Golden Jasmine & Sunlit Bergamot',
+    price50: 210,
+    price100: 330,
+    gender: 'Pour Femme',
+    family: 'Floral',
+    notes: {
+      top: ['Sunlit Bergamot', 'Mandarin Leaf'],
+      heart: ['Night-Blooming Jasmine', 'Orange Blossom', 'Neroli'],
+      base: ['Solar Amber', 'Vanilla Bean', 'White Cedar']
+    },
+    description: 'An radiant homage to midsummer twilights in Mediterranean citrus orchards. Luminous floral heart notes linger against a sultry, velvety vanilla base.',
+    liquidColor: '#e5c158',
+    rating: 4.8,
+    reviewsCount: 94,
+    isNew: false
+  },
+  {
+    id: 'velvet-nocturne',
+    name: 'Velvet Nocturne',
+    tagline: 'Black Iris, Leather & Saffron',
+    price50: 260,
+    price100: 410,
+    gender: 'Unisex',
+    family: 'Oriental',
+    notes: {
+      top: ['Saffron Thread', 'Black Cherry', 'Cinnamon'],
+      heart: ['Florentine Iris', 'Damask Rose', 'Cacao'],
+      base: ['Tuscan Leather', 'Tonka Bean', 'Dark Patchouli']
+    },
+    description: 'Sensual and intoxicating. Velvet Nocturne envelopes the senses in rich Italian leather, midnight bloom iris, and a whisper of dark spices.',
+    liquidColor: '#a86527',
+    rating: 5.0,
+    reviewsCount: 215,
+    isNew: false
+  },
+  {
+    id: 'vetiver-imperial',
+    name: 'Vetiver Impérial',
+    tagline: 'Crisp Haitian Vetiver & Sea Salt',
+    price50: 195,
+    price100: 310,
+    gender: 'Pour Homme',
+    family: 'Fresh',
+    notes: {
+      top: ['Grapefruit', 'Sea Salt', 'Green Sage'],
+      heart: ['Haitian Vetiver', 'Nutmeg', 'Geranium'],
+      base: ['Atlas Cedarwood', 'Oakmoss', 'Vetiver Root']
+    },
+    description: 'Commanding yet refreshing. A modern reinterpretation of classic vetiver elevated with crisp marine minerals and smoky cedarwood notes.',
+    liquidColor: '#8a9a86',
+    rating: 4.7,
+    reviewsCount: 62,
+    isNew: true
+  }
+];
+
+export default function LuxuryPerfumeApp() {
+  // Navigation & View State
+  const [activeTab, setActiveTab] = useState('home'); // 'home' | 'shop' | 'detail' | 'checkout'
+  const [selectedProductId, setSelectedProductId] = useState('aethel-oud');
+  
+  // Interactive UI State
+  const [cart, setCart] = useState([
+    { productId: 'aethel-oud', size: '100ml', price: 380, quantity: 1 }
+  ]);
+  const [wishlist, setWishlist] = useState(['velvet-nocturne']);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Shop Filters
+  const [selectedFamily, setSelectedFamily] = useState('All');
+  const [selectedGender, setSelectedGender] = useState('All');
+
+  // Product Detail Selection State
+  const [selectedSize, setSelectedSize] = useState('100ml');
+
+  // Selected Product Computed Properties
+  const selectedProduct = useMemo(() => {
+    return PRODUCTS.find(p => p.id === selectedProductId) || PRODUCTS[0];
+  }, [selectedProductId]);
+
+  const currentPrice = selectedSize === '50ml' ? selectedProduct.price50 : selectedProduct.price100;
+
+  // Filtered Shop Catalog
+  const filteredProducts = useMemo(() => {
+    return PRODUCTS.filter(product => {
+      const matchFamily = selectedFamily === 'All' || product.family === selectedFamily;
+      const matchGender = selectedGender === 'All' || product.gender === selectedGender;
+      return matchFamily && matchGender;
+    });
+  }, [selectedFamily, selectedGender]);
+
+  // Cart Calculations
+  const cartSubtotal = useMemo(() => {
+    return cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  }, [cart]);
+
+  const cartCount = useMemo(() => {
+    return cart.reduce((acc, item) => acc + item.quantity, 0);
+  }, [cart]);
+
+  // Actions
+  const toggleWishlist = (id) => {
+    setWishlist(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const addToCart = (product, size, price) => {
+    setCart(prev => {
+      const existingIndex = prev.findIndex(item => item.productId === product.id && item.size === size);
+      if (existingIndex > -1) {
+        const next = [...prev];
+        next[existingIndex].quantity += 1;
+        return next;
+      }
+      return [...prev, { productId: product.id, size, price, quantity: 1 }];
+    });
+    setIsCartOpen(true);
+  };
+
+  const updateCartQty = (productId, size, delta) => {
+    setCart(prev => {
+      return prev.map(item => {
+        if (item.productId === productId && item.size === size) {
+          const newQty = item.quantity + delta;
+          return newQty > 0 ? { ...item, quantity: newQty } : null;
+        }
+        return item;
+      }).filter(Boolean);
+    });
+  };
+
+  const navigateToDetail = (productId) => {
+    setSelectedProductId(productId);
+    setSelectedSize('100ml');
+    setActiveTab('detail');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] text-[#f5f5f0] font-sans selection:bg-[#d4af37] selection:text-[#0a0a0a] flex flex-col">
+      
+      {/* --- TOP ANNOUNCEMENT BAR --- */}
+      <div className="bg-[#121212] border-b border-[#d4af37]/20 text-[11px] uppercase tracking-[0.25em] text-[#d4af37] py-2 text-center font-medium">
+        Complimentary 2ml Private Reserve Discovery Sample with every order
+      </div>
+
+      {/* --- NAVIGATION BAR --- */}
+      <nav className="sticky top-0 z-40 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-[#d4af37]/15 transition-all">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          
+          {/* Brand Logo */}
+          <button 
+            onClick={() => setActiveTab('home')}
+            className="text-left group"
+          >
+            <span className="font-serif text-2xl md:text-3xl tracking-[0.3em] font-light text-[#f5f5f0] group-hover:text-[#d4af37] transition-colors block">
+              AURA & OUD
+            </span>
+            <span className="text-[9px] uppercase tracking-[0.4em] text-[#d4af37]/70 block -mt-1">
+              Haute Parfumerie
+            </span>
+          </button>
+
+          {/* Navigation Links */}
+          <div className="hidden md:flex items-center space-x-10 text-xs tracking-[0.25em] uppercase font-light">
+            <button 
+              onClick={() => setActiveTab('home')}
+              className={`hover:text-[#d4af37] transition-colors ${activeTab === 'home' ? 'text-[#d4af37] border-b border-[#d4af37] pb-1' : 'text-[#f5f5f0]/80'}`}
+            >
+              Home
+            </button>
+            <button 
+              onClick={() => setActiveTab('shop')}
+              className={`hover:text-[#d4af37] transition-colors ${activeTab === 'shop' ? 'text-[#d4af37] border-b border-[#d4af37] pb-1' : 'text-[#f5f5f0]/80'}`}
+            >
+              Collection
+            </button>
+            <button 
+              onClick={() => navigateToDetail('aethel-oud')}
+              className={`hover:text-[#d4af37] transition-colors ${activeTab === 'detail' ? 'text-[#d4af37] border-b border-[#d4af37] pb-1' : 'text-[#f5f5f0]/80'}`}
+            >
+              Signature Scent
+            </button>
+          </div>
+
+          {/* Header Action Controls */}
+          <div className="flex items-center space-x-6">
+            <button 
+              onClick={() => setIsSearchOpen(true)}
+              className="p-2 text-[#f5f5f0]/80 hover:text-[#d4af37] transition-colors"
+              aria-label="Search"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+
+            <button 
+              onClick={() => setActiveTab('shop')}
+              className="relative p-2 text-[#f5f5f0]/80 hover:text-[#d4af37] transition-colors"
+              aria-label="Wishlist"
+            >
+              <Heart className="w-5 h-5" />
+              {wishlist.length > 0 && (
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#d4af37]" />
+              )}
+            </button>
+
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 bg-[#171717] border border-[#d4af37]/30 hover:border-[#d4af37] text-[#d4af37] transition-all rounded-sm flex items-center gap-2 px-3 py-1.5"
+              aria-label="Shopping Cart"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              <span className="text-xs font-mono font-bold">{cartCount}</span>
+            </button>
+
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-[#f5f5f0]"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Dropdown Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-[#121212] border-b border-[#d4af37]/20 px-6 py-4 flex flex-col gap-4 text-xs tracking-widest uppercase">
+            <button onClick={() => { setActiveTab('home'); setMobileMenuOpen(false); }} className="text-left py-1 text-[#d4af37]">Home</button>
+            <button onClick={() => { setActiveTab('shop'); setMobileMenuOpen(false); }} className="text-left py-1">Collection</button>
+            <button onClick={() => { navigateToDetail('aethel-oud'); setMobileMenuOpen(false); }} className="text-left py-1">Featured Parfum</button>
+          </div>
+        )}
+      </nav>
+
+      {/* --- SEARCH OVERLAY MODAL --- */}
+      {isSearchOpen && (
+        <div className="fixed inset-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-md flex flex-col p-6 animate-fadeIn">
+          <div className="flex justify-between items-center max-w-4xl mx-auto w-full pt-8">
+            <span className="text-xs uppercase tracking-[0.3em] text-[#d4af37]">Search Fragrance Vault</span>
+            <button onClick={() => setIsSearchOpen(false)} className="p-2 text-[#f5f5f0]/60 hover:text-[#d4af37]">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+          <div className="max-w-4xl mx-auto w-full mt-8">
+            <input 
+              type="text" 
+              placeholder="Type scent notes, gender, or fragrance name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoFocus
+              className="w-full bg-transparent border-b-2 border-[#d4af37]/40 focus:border-[#d4af37] text-xl md:text-3xl font-serif text-[#f5f5f0] py-4 focus:outline-none placeholder-[#f5f5f0]/30"
+            />
+            
+            {/* Search Results */}
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {PRODUCTS.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.family.toLowerCase().includes(searchQuery.toLowerCase())).map(product => (
+                <div 
+                  key={product.id}
+                  onClick={() => { navigateToDetail(product.id); setIsSearchOpen(false); }}
+                  className="p-4 bg-[#121212] border border-[#d4af37]/10 hover:border-[#d4af37]/50 rounded cursor-pointer flex items-center justify-between transition-colors"
+                >
+                  <div>
+                    <div className="text-xs text-[#d4af37] tracking-widest uppercase">{product.family}</div>
+                    <div className="font-serif text-lg text-[#f5f5f0]">{product.name}</div>
+                  </div>
+                  <div className="text-sm font-mono text-[#d4af37]">${product.price100}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- MAIN CONTENT AREA --- */}
+      <main className="flex-grow">
+        
+        {/* ================= VIEW 1: HOME PAGE ================= */}
+        {activeTab === 'home' && (
+          <div>
+            {/* Hero Section */}
+            <section className="relative h-[85vh] flex items-center justify-center overflow-hidden border-b border-[#d4af37]/20">
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/50 to-transparent z-10" />
+              
+              {/* Dark Ambient Visual Background */}
+              <div className="absolute inset-0 bg-[#141210] flex items-center justify-center">
+                <div className="w-[600px] h-[600px] bg-[#d4af37]/10 rounded-full blur-[140px] animate-pulse" />
+              </div>
+
+              <div className="relative z-20 text-center max-w-3xl mx-auto px-6">
+                <span className="text-xs uppercase tracking-[0.5em] text-[#d4af37] mb-4 block font-medium">
+                  Extrait de Parfum Collection
+                </span>
+                <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl font-light text-[#f5f5f0] tracking-tight leading-none mb-6">
+                  Liquid Ethereal.
+                </h1>
+                <p className="text-sm md:text-base text-[#f5f5f0]/70 font-light tracking-widest max-w-xl mx-auto mb-10 leading-relaxed">
+                  Hand-harvested botanicals, wild-harvested Assam oud, and precious amber resins distilled for the discerning few.
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <button 
+                    onClick={() => setActiveTab('shop')}
+                    className="px-8 py-4 bg-[#d4af37] text-[#0a0a0a] font-medium text-xs uppercase tracking-[0.3em] hover:bg-[#e5c158] transition-all shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+                  >
+                    Explore Vault
+                  </button>
+                  <button 
+                    onClick={() => navigateToDetail('aethel-oud')}
+                    className="px-8 py-4 border border-[#d4af37]/40 text-[#f5f5f0] font-medium text-xs uppercase tracking-[0.3em] hover:border-[#d4af37] hover:bg-[#d4af37]/10 transition-all"
+                  >
+                    Discover Aethel Oud
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            {/* Signature Showcase Carousel / Grid */}
+            <section className="max-w-7xl mx-auto px-6 py-24">
+              <div className="flex justify-between items-end mb-16">
+                <div>
+                  <span className="text-xs uppercase tracking-[0.3em] text-[#d4af37] block mb-2">Curated Editions</span>
+                  <h2 className="font-serif text-3xl md:text-4xl text-[#f5f5f0] font-light">Signature Fragrances</h2>
+                </div>
+                <button 
+                  onClick={() => setActiveTab('shop')}
+                  className="hidden md:flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-[#d4af37] hover:underline"
+                >
+                  View Full Vault <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {PRODUCTS.slice(0, 3).map(product => (
+                  <div 
+                    key={product.id}
+                    className="group bg-[#111111] border border-[#d4af37]/20 hover:border-[#d4af37] transition-all duration-500 rounded-sm p-6 flex flex-col justify-between"
+                  >
+                    <div>
+                      {/* Bottle Visual Component */}
+                      <div 
+                        onClick={() => navigateToDetail(product.id)}
+                        className="h-64 bg-[#0a0a0a] rounded border border-[#d4af37]/10 flex items-center justify-center relative cursor-pointer overflow-hidden group-hover:scale-[1.02] transition-transform duration-500"
+                      >
+                        <div 
+                          className="w-16 h-40 rounded-t-lg rounded-b-md border border-[#d4af37]/40 relative shadow-2xl flex flex-col justify-between p-2"
+                          style={{ backgroundColor: `${product.liquidColor}22` }}
+                        >
+                          <div className="w-8 h-6 bg-[#d4af37] mx-auto -mt-6 border border-[#0a0a0a] rounded-sm" />
+                          <div className="text-[8px] text-center uppercase tracking-tighter text-[#d4af37] border-t border-b border-[#d4af37]/30 py-1">
+                            {product.name}
+                          </div>
+                        </div>
+                        {product.isNew && (
+                          <span className="absolute top-3 left-3 bg-[#d4af37] text-[#0a0a0a] text-[9px] uppercase tracking-widest px-2 py-0.5 font-bold">
+                            Edition I
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="mt-6">
+                        <div className="flex justify-between items-start">
+                          <span className="text-[10px] uppercase tracking-[0.2em] text-[#d4af37]">{product.family} • {product.gender}</span>
+                          <button onClick={() => toggleWishlist(product.id)} className="text-[#f5f5f0]/40 hover:text-[#d4af37]">
+                            <Heart className={`w-4 h-4 ${wishlist.includes(product.id) ? 'fill-[#d4af37] text-[#d4af37]' : ''}`} />
+                          </button>
+                        </div>
+                        <h3 
+                          onClick={() => navigateToDetail(product.id)}
+                          className="font-serif text-xl text-[#f5f5f0] mt-1 cursor-pointer hover:text-[#d4af37] transition-colors"
+                        >
+                          {product.name}
+                        </h3>
+                        <p className="text-xs text-[#f5f5f0]/60 mt-2 line-clamp-2 leading-relaxed">
+                          {product.tagline}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-8 pt-4 border-t border-[#d4af37]/10 flex items-center justify-between">
+                      <span className="font-mono text-sm text-[#d4af37]">${product.price100}</span>
+                      <button 
+                        onClick={() => addToCart(product, '100ml', product.price100)}
+                        className="text-xs uppercase tracking-widest text-[#f5f5f0] hover:text-[#d4af37] border-b border-transparent hover:border-[#d4af37] pb-0.5 transition-all"
+                      >
+                        + Add to Cart
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Brand Heritage Section */}
+            <section className="border-t border-b border-[#d4af37]/20 bg-[#0d0d0d] py-24">
+              <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                <div>
+                  <span className="text-xs uppercase tracking-[0.4em] text-[#d4af37] block mb-3">Savoir-Faire</span>
+                  <h2 className="font-serif text-3xl md:text-5xl font-light text-[#f5f5f0] mb-6 leading-tight">
+                    Slow Distillation. Uncompromised Purity.
+                  </h2>
+                  <p className="text-sm text-[#f5f5f0]/70 leading-relaxed font-light mb-6">
+                    Each flacon of Aura & Oud takes upwards of fourteen months to mature. We source wild, sustainable agarwood from private preserves and extract raw florals through ancient cold enfleurage techniques.
+                  </p>
+                  <div className="grid grid-cols-2 gap-6 pt-6 border-t border-[#d4af37]/20">
+                    <div>
+                      <span className="font-serif text-2xl text-[#d4af37] block">100%</span>
+                      <span className="text-[10px] uppercase tracking-widest text-[#f5f5f0]/60">Pure Extrait Concentration</span>
+                    </div>
+                    <div>
+                      <span className="font-serif text-2xl text-[#d4af37] block">30 Year</span>
+                      <span className="text-[10px] uppercase tracking-widest text-[#f5f5f0]/60">Aged Assam Reserve</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="h-96 bg-[#121212] border border-[#d4af37]/30 rounded p-8 flex flex-col justify-center items-center text-center relative overflow-hidden">
+                  <div className="w-32 h-32 rounded-full border border-[#d4af37]/40 flex items-center justify-center mb-6">
+                    <Sparkles className="w-12 h-12 text-[#d4af37]" />
+                  </div>
+                  <blockquote className="font-serif italic text-lg text-[#f5f5f0]/90 max-w-sm">
+                    "Perfume is the unseen, unforgettable, ultimate accessory of fashion."
+                  </blockquote>
+                </div>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {/* ================= VIEW 2: SHOP / CATALOG PAGE ================= */}
+        {activeTab === 'shop' && (
+          <div className="max-w-7xl mx-auto px-6 py-12">
+            
+            {/* Header Title */}
+            <div className="border-b border-[#d4af37]/20 pb-8 mb-12 text-center md:text-left">
+              <span className="text-xs uppercase tracking-[0.4em] text-[#d4af37] block mb-2">The Vault</span>
+              <h1 className="font-serif text-4xl md:text-5xl font-light text-[#f5f5f0]">Fragrance Catalog</h1>
+            </div>
+
+            {/* Filter Bar Controls */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 bg-[#121212] p-6 border border-[#d4af37]/20 rounded-sm">
+              <div className="flex items-center gap-3">
+                <Filter className="w-4 h-4 text-[#d4af37]" />
+                <span className="text-xs uppercase tracking-widest text-[#f5f5f0]">Filter By:</span>
+              </div>
+
+              {/* Scent Family Filter */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-[#f5f5f0]/50 mr-2">Olfactory Family:</span>
+                {['All', 'Woody', 'Oriental', 'Floral', 'Fresh'].map(family => (
+                  <button
+                    key={family}
+                    onClick={() => setSelectedFamily(family)}
+                    className={`px-3 py-1 text-xs uppercase tracking-wider transition-all border ${
+                      selectedFamily === family 
+                        ? 'bg-[#d4af37] text-[#0a0a0a] border-[#d4af37]' 
+                        : 'border-[#d4af37]/20 text-[#f5f5f0]/70 hover:border-[#d4af37]'
+                    }`}
+                  >
+                    {family}
+                  </button>
+                ))}
+              </div>
+
+              {/* Gender Filter */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-[#f5f5f0]/50 mr-2">Gender:</span>
+                {['All', 'Unisex', 'Pour Femme', 'Pour Homme'].map(gender => (
+                  <button
+                    key={gender}
+                    onClick={() => setSelectedGender(gender)}
+                    className={`px-3 py-1 text-xs uppercase tracking-wider transition-all border ${
+                      selectedGender === gender 
+                        ? 'bg-[#d4af37] text-[#0a0a0a] border-[#d4af37]' 
+                        : 'border-[#d4af37]/20 text-[#f5f5f0]/70 hover:border-[#d4af37]'
+                    }`}
+                  >
+                    {gender}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Catalog Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
+              {filteredProducts.map(product => (
+                <div 
+                  key={product.id}
+                  className="bg-[#111111] border border-[#d4af37]/20 hover:border-[#d4af37] transition-all duration-300 rounded-sm p-5 flex flex-col justify-between group"
+                >
+                  <div>
+                    {/* Bottle Visual Display */}
+                    <div 
+                      onClick={() => navigateToDetail(product.id)}
+                      className="h-56 bg-[#0a0a0a] rounded border border-[#d4af37]/10 flex items-center justify-center relative cursor-pointer overflow-hidden"
+                    >
+                      <div 
+                        className="w-14 h-36 rounded-t-lg rounded-b-md border border-[#d4af37]/40 relative flex flex-col justify-between p-2 transition-transform duration-500 group-hover:scale-110"
+                        style={{ backgroundColor: `${product.liquidColor}22` }}
+                      >
+                        <div className="w-6 h-5 bg-[#d4af37] mx-auto -mt-5 border border-[#0a0a0a]" />
+                        <div className="text-[7px] text-center uppercase tracking-tighter text-[#d4af37] border-t border-b border-[#d4af37]/30 py-0.5">
+                          {product.name}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <div className="flex justify-between items-center text-[9px] uppercase tracking-widest text-[#d4af37]">
+                        <span>{product.family}</span>
+                        <span>{product.gender}</span>
+                      </div>
+                      <h3 
+                        onClick={() => navigateToDetail(product.id)}
+                        className="font-serif text-lg text-[#f5f5f0] mt-1 cursor-pointer hover:text-[#d4af37] transition-colors"
+                      >
+                        {product.name}
+                      </h3>
+                      
+                      {/* Top Notes Badges */}
+                      <div className="flex flex-wrap gap-1 mt-3">
+                        {product.notes.top.map((note, i) => (
+                          <span key={i} className="text-[9px] bg-[#1a1a1a] text-[#f5f5f0]/60 px-2 py-0.5 border border-[#d4af37]/10">
+                            {note}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 pt-4 border-t border-[#d4af37]/10 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-[#f5f5f0]/40 block">100ml</span>
+                      <span className="font-mono text-sm text-[#d4af37]">${product.price100}</span>
+                    </div>
+                    <button 
+                      onClick={() => addToCart(product, '100ml', product.price100)}
+                      className="px-3 py-2 bg-[#1c1c1c] hover:bg-[#d4af37] hover:text-[#0a0a0a] border border-[#d4af37]/30 text-xs uppercase tracking-wider text-[#d4af37] transition-all"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ================= VIEW 3: PRODUCT DETAIL PAGE ================= */}
+        {activeTab === 'detail' && (
+          <div className="max-w-7xl mx-auto px-6 py-12">
+            
+            {/* Back Button */}
+            <button 
+              onClick={() => setActiveTab('shop')}
+              className="text-xs uppercase tracking-widest text-[#d4af37] hover:underline mb-8 flex items-center gap-2"
+            >
+              ← Back to Collection
+            </button>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+              
+              {/* Left Column: Interactive 3D Bottle Viewer Component */}
+              <div className="bg-[#121212] border border-[#d4af37]/30 rounded-lg p-8 flex flex-col items-center justify-center relative min-h-[500px]">
+                <div className="absolute top-4 left-4 bg-[#0a0a0a]/80 backdrop-blur border border-[#d4af37]/30 px-3 py-1 rounded text-[10px] uppercase tracking-widest text-[#d4af37] flex items-center gap-2">
+                  <Sparkles className="w-3 h-3" /> Interactive 3D Inspection
+                </div>
+
+                {/* 3D Bottle Visual Simulation */}
+                <div className="relative w-48 h-80 my-8 cursor-grab active:cursor-grabbing group">
+                  <div className="absolute inset-0 bg-[#d4af37]/10 rounded-full blur-2xl group-hover:bg-[#d4af37]/20 transition-all" />
+                  
+                  {/* Flacon Cap */}
+                  <div className="w-16 h-12 bg-gradient-to-r from-[#d4af37] via-[#f3e098] to-[#b38f24] mx-auto border border-[#0a0a0a] rounded-sm shadow-xl relative z-10" />
+                  
+                  {/* Flacon Neck */}
+                  <div className="w-10 h-6 bg-[#d4af37]/60 mx-auto border-x border-[#0a0a0a]" />
+
+                  {/* Main Glass Body */}
+                  <div 
+                    className="w-48 h-64 border-2 border-[#d4af37]/60 rounded-t-xl rounded-b-md relative shadow-2xl overflow-hidden backdrop-blur-sm flex flex-col justify-between p-4"
+                    style={{ 
+                      background: `linear-gradient(180deg, ${selectedProduct.liquidColor}33 0%, ${selectedProduct.liquidColor}99 100%)` 
+                    }}
+                  >
+                    <div className="text-center my-auto">
+                      <div className="text-xs uppercase tracking-[0.3em] font-serif text-[#f5f5f0] border-t border-b border-[#d4af37]/40 py-2 my-2">
+                        {selectedProduct.name}
+                      </div>
+                      <div className="text-[8px] uppercase tracking-widest text-[#d4af37]">
+                        PARFUM EXTRAIT
+                      </div>
+                    </div>
+
+                    <div className="text-[9px] font-mono text-center text-[#d4af37]/80">
+                      {selectedSize}
+                    </div>
+                  </div>
+                </div>
+
+                <span className="text-[10px] uppercase tracking-widest text-[#f5f5f0]/40 mt-4">
+                  Drag to rotate 360° flacon view
+                </span>
+              </div>
+
+              {/* Right Column: Product Info & Note Breakdown */}
+              <div>
+                <div className="flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-[#d4af37] mb-2">
+                  <span>{selectedProduct.family}</span>
+                  <span>•</span>
+                  <span>{selectedProduct.gender}</span>
+                </div>
+
+                <h1 className="font-serif text-4xl md:text-5xl text-[#f5f5f0] font-light mb-3">
+                  {selectedProduct.name}
+                </h1>
+
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="flex text-[#d4af37]">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-[#d4af37]" />
+                    ))}
+                  </div>
+                  <span className="text-xs text-[#f5f5f0]/60 font-mono">
+                    {selectedProduct.rating} ({selectedProduct.reviewsCount} Reviews)
+                  </span>
+                </div>
+
+                <div className="text-2xl font-mono text-[#d4af37] mb-6">
+                  ${currentPrice}
+                </div>
+
+                <p className="text-sm text-[#f5f5f0]/80 font-light leading-relaxed mb-8">
+                  {selectedProduct.description}
+                </p>
+
+                {/* Size Selector */}
+                <div className="mb-8">
+                  <span className="text-xs uppercase tracking-widest text-[#f5f5f0]/70 block mb-3">Select Volumetric Size</span>
+                  <div className="flex gap-4">
+                    {['50ml', '100ml'].map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => setSelectedSize(size)}
+                        className={`flex-1 py-3 border text-xs uppercase tracking-widest font-mono transition-all ${
+                          selectedSize === size 
+                            ? 'bg-[#d4af37] text-[#0a0a0a] border-[#d4af37] font-bold' 
+                            : 'border-[#d4af37]/30 text-[#f5f5f0] hover:border-[#d4af37]'
+                        }`}
+                      >
+                        {size} - ${size === '50ml' ? selectedProduct.price50 : selectedProduct.price100}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Scent Pyramid Card */}
+                <div className="bg-[#121212] border border-[#d4af37]/20 rounded-sm p-6 mb-8">
+                  <h3 className="text-xs uppercase tracking-[0.3em] text-[#d4af37] mb-4 pb-2 border-b border-[#d4af37]/20">
+                    Olfactory Pyramid Breakdown
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider text-[#f5f5f0]/50 block">Head / Top Notes</span>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {selectedProduct.notes.top.map((note, i) => (
+                          <span key={i} className="text-xs bg-[#1a1a1a] text-[#d4af37] border border-[#d4af37]/30 px-2.5 py-1 rounded-sm">
+                            {note}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider text-[#f5f5f0]/50 block">Heart / Middle Notes</span>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {selectedProduct.notes.heart.map((note, i) => (
+                          <span key={i} className="text-xs bg-[#1a1a1a] text-[#f5f5f0] border border-[#d4af37]/20 px-2.5 py-1 rounded-sm">
+                            {note}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider text-[#f5f5f0]/50 block">Base / Dry-Down Notes</span>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {selectedProduct.notes.base.map((note, i) => (
+                          <span key={i} className="text-xs bg-[#1a1a1a] text-[#f5f5f0]/80 border border-[#d4af37]/20 px-2.5 py-1 rounded-sm">
+                            {note}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Add to Cart Actions */}
+                <div className="flex gap-4 mb-8">
+                  <button 
+                    onClick={() => addToCart(selectedProduct, selectedSize, currentPrice)}
+                    className="flex-1 bg-[#d4af37] text-[#0a0a0a] py-4 text-xs uppercase tracking-[0.25em] font-bold hover:bg-[#e5c158] transition-all shadow-[0_0_20px_rgba(212,175,55,0.2)]"
+                  >
+                    Add To Cart • ${currentPrice}
+                  </button>
+                  <button 
+                    onClick={() => toggleWishlist(selectedProduct.id)}
+                    className="p-4 border border-[#d4af37]/30 hover:border-[#d4af37] text-[#d4af37]"
+                  >
+                    <Heart className={`w-5 h-5 ${wishlist.includes(selectedProduct.id) ? 'fill-[#d4af37]' : ''}`} />
+                  </button>
+                </div>
+
+                {/* Guarantees */}
+                <div className="grid grid-cols-3 gap-4 border-t border-[#d4af37]/20 pt-6 text-center text-[10px] uppercase tracking-wider text-[#f5f5f0]/60">
+                  <div className="flex flex-col items-center gap-2">
+                    <Truck className="w-4 h-4 text-[#d4af37]" />
+                    <span>Complimentary Express Shipping</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-[#d4af37]" />
+                    <span>Guaranteed Authentic Batch</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <RefreshCw className="w-4 h-4 text-[#d4af37]" />
+                    <span>30-Day Vault Return</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ================= VIEW 4: MULTI-STEP CHECKOUT PAGE ================= */}
+        {activeTab === 'checkout' && (
+          <div className="max-w-4xl mx-auto px-6 py-12">
+            <h1 className="font-serif text-3xl text-[#f5f5f0] text-center mb-8">Private Vault Checkout</h1>
+            
+            <div className="bg-[#121212] border border-[#d4af37]/20 rounded p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                {/* Shipping Details */}
+                <div className="space-y-4">
+                  <h3 className="text-xs uppercase tracking-widest text-[#d4af37] border-b border-[#d4af37]/20 pb-2">
+                    1. Shipping Information
+                  </h3>
+                  <div>
+                    <label className="text-[10px] uppercase text-[#f5f5f0]/60 block mb-1">Full Name</label>
+                    <input type="text" defaultValue="Lord Sterling" className="w-full bg-[#0a0a0a] border border-[#d4af37]/30 p-2 text-xs text-[#f5f5f0] focus:border-[#d4af37] focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase text-[#f5f5f0]/60 block mb-1">Delivery Address</label>
+                    <input type="text" defaultValue="740 Park Avenue, Penthouse B" className="w-full bg-[#0a0a0a] border border-[#d4af37]/30 p-2 text-xs text-[#f5f5f0] focus:border-[#d4af37] focus:outline-none" />
+                  </div>
+                </div>
+
+                {/* Payment Simulation */}
+                <div className="space-y-4">
+                  <h3 className="text-xs uppercase tracking-widest text-[#d4af37] border-b border-[#d4af37]/20 pb-2">
+                    2. Payment Method
+                  </h3>
+                  <div className="p-4 border border-[#d4af37] bg-[#0a0a0a] rounded flex items-center justify-between">
+                    <span className="text-xs text-[#f5f5f0]">Encrypted Credit Card</span>
+                    <span className="text-xs font-mono text-[#d4af37]">•••• 8892</span>
+                  </div>
+                  
+                  <div className="pt-4 border-t border-[#d4af37]/10">
+                    <div className="flex justify-between text-xs mb-2">
+                      <span className="text-[#f5f5f0]/60">Subtotal</span>
+                      <span className="font-mono text-[#f5f5f0]">${cartSubtotal}</span>
+                    </div>
+                    <div className="flex justify-between text-xs mb-2">
+                      <span className="text-[#f5f5f0]/60">Vault Insured Shipping</span>
+                      <span className="text-[#d4af37] uppercase text-[10px]">Complimentary</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-bold pt-2 border-t border-[#d4af37]/20">
+                      <span className="text-[#f5f5f0]">Total</span>
+                      <span className="font-mono text-[#d4af37]">${cartSubtotal}</span>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => {
+                      alert('Order Confirmed! Your Private Reserve shipment is being prepared.');
+                      setCart([]);
+                      setActiveTab('home');
+                    }}
+                    className="w-full bg-[#d4af37] text-[#0a0a0a] py-3 text-xs uppercase tracking-widest font-bold hover:bg-[#e5c158] transition-all mt-4"
+                  >
+                    Complete Order
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        )}
+
+      </main>
+
+      {/* --- SLIDE-OVER CART DRAWER --- */}
+      {isCartOpen && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          <div className="absolute inset-0 bg-[#0a0a0a]/80 backdrop-blur-sm" onClick={() => setIsCartOpen(false)} />
+
+          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+            <div className="w-screen max-w-md bg-[#121212] border-l border-[#d4af37]/30 p-6 flex flex-col justify-between shadow-2xl">
+              
+              <div>
+                <div className="flex items-center justify-between border-b border-[#d4af37]/20 pb-4">
+                  <h2 className="font-serif text-xl text-[#f5f5f0]">Your Selection ({cartCount})</h2>
+                  <button onClick={() => setIsCartOpen(false)} className="text-[#f5f5f0]/60 hover:text-[#d4af37]">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Cart Items List */}
+                <div className="mt-6 space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                  {cart.length === 0 ? (
+                    <div className="text-center py-12 text-xs uppercase tracking-widest text-[#f5f5f0]/40">
+                      Your vault cart is empty
+                    </div>
+                  ) : (
+                    cart.map((item, idx) => {
+                      const product = PRODUCTS.find(p => p.id === item.productId);
+                      if (!product) return null;
+                      return (
+                        <div key={idx} className="p-3 bg-[#0a0a0a] border border-[#d4af37]/20 rounded flex justify-between items-center">
+                          <div>
+                            <h4 className="font-serif text-sm text-[#f5f5f0]">{product.name}</h4>
+                            <span className="text-[10px] text-[#d4af37] uppercase">{item.size}</span>
+                            <div className="flex items-center gap-2 mt-2">
+                              <button onClick={() => updateCartQty(item.productId, item.size, -1)} className="px-2 py-0.5 bg-[#1c1c1c] text-xs text-[#f5f5f0] border border-[#d4af37]/20">-</button>
+                              <span className="text-xs font-mono">{item.quantity}</span>
+                              <button onClick={() => updateCartQty(item.productId, item.size, 1)} className="px-2 py-0.5 bg-[#1c1c1c] text-xs text-[#f5f5f0] border border-[#d4af37]/20">+</button>
+                            </div>
+                          </div>
+                          <div className="font-mono text-sm text-[#d4af37]">
+                            ${item.price * item.quantity}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* Cart Footer */}
+              {cart.length > 0 && (
+                <div className="border-t border-[#d4af37]/20 pt-4 space-y-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[#f5f5f0]/60 uppercase tracking-wider text-xs">Subtotal</span>
+                    <span className="font-mono text-[#d4af37] font-bold">${cartSubtotal}</span>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setIsCartOpen(false);
+                      setActiveTab('checkout');
+                    }}
+                    className="w-full bg-[#d4af37] text-[#0a0a0a] py-3 text-xs uppercase tracking-widest font-bold hover:bg-[#e5c158] transition-all"
+                  >
+                    Proceed To Checkout
+                  </button>
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- FOOTER --- */}
+      <footer className="bg-[#080808] border-t border-[#d4af37]/20 py-16">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-10">
+          <div>
+            <span className="font-serif text-xl tracking-[0.2em] text-[#f5f5f0] block mb-4">AURA & OUD</span>
+            <p className="text-xs text-[#f5f5f0]/50 leading-relaxed font-light">
+              Haute Parfumerie crafting artisanal extraits de parfum. Blended and hand-poured in small numbered batches.
+            </p>
+          </div>
+
+          <div>
+            <h4 className="text-xs uppercase tracking-widest text-[#d4af37] mb-4">Navigation</h4>
+            <ul className="space-y-2 text-xs text-[#f5f5f0]/70 font-light">
+              <li onClick={() => setActiveTab('home')} className="hover:text-[#d4af37] cursor-pointer">Home</li>
+              <li onClick={() => setActiveTab('shop')} className="hover:text-[#d4af37] cursor-pointer">The Vault</li>
+              <li onClick={() => navigateToDetail('aethel-oud')} className="hover:text-[#d4af37] cursor-pointer">Signature Scent</li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-xs uppercase tracking-widest text-[#d4af37] mb-4">Concierge</h4>
+            <ul className="space-y-2 text-xs text-[#f5f5f0]/70 font-light">
+              <li className="hover:text-[#d4af37] cursor-pointer">Private Consultations</li>
+              <li className="hover:text-[#d4af37] cursor-pointer">Bespoke Formulations</li>
+              <li className="hover:text-[#d4af37] cursor-pointer">Shipping & Vault Guarantee</li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-xs uppercase tracking-widest text-[#d4af37] mb-4">Private Gazette</h4>
+            <p className="text-xs text-[#f5f5f0]/50 mb-3">Subscribe for invitations to unreleased batch drops.</p>
+            <div className="flex">
+              <input type="email" placeholder="Enter email" className="bg-[#121212] border border-[#d4af37]/30 p-2 text-xs text-[#f5f5f0] flex-grow focus:outline-none focus:border-[#d4af37]" />
+              <button className="bg-[#d4af37] text-[#0a0a0a] px-3 text-xs uppercase font-bold">Join</button>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-6 mt-12 pt-6 border-t border-[#d4af37]/10 text-center text-[10px] uppercase tracking-widest text-[#f5f5f0]/30">
+          © {new Date().getFullYear()} Aura & Oud Parfums. All Rights Reserved.
+        </div>
+      </footer>
+
+    </div>
+  );
+}
