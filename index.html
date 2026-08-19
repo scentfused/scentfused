@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCENTFUSED | Haute Parfumerie</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-black: #0a0a0a;
+      --bg-card: #141414;
+      --gold-primary: #d4af37;
+      --gold-light: #f3e5ab;
+      --gold-dark: #aa820a;
+      --text-white: #f5f5f5;
+      --text-muted: #a0a0a0;
+      --border-gold: rgba(212, 175, 55, 0.3);
+      --border-gold-glow: rgba(212, 175, 55, 0.8);
+      --font-serif: 'Cinzel', serif;
+      --font-sans: 'Montserrat', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-black);
+      color: var(--text-white);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4, .brand-logo {
+      font-family: var(--font-serif);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      cursor: pointer;
+      font-family: var(--font-sans);
+      border: none;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    /* --- Custom Scrollbar --- */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-black);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #222;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--gold-primary);
+    }
+
+    /* --- Gold UI Elements --- */
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+      color: var(--bg-black);
+      padding: 12px 28px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      border: 1px solid var(--gold-primary);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-gold:hover {
+      box-shadow: 0 0 15px var(--border-gold-glow);
+      background: linear-gradient(135deg, var(--gold-light), var(--gold-primary));
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--gold-primary);
+      padding: 12px 28px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      border: 1px solid var(--gold-primary);
+    }
+
+    .btn-outline:hover {
+      background: var(--gold-primary);
+      color: var(--bg-black);
+      box-shadow: 0 0 15px var(--border-gold-glow);
+    }
+
+    /* --- Sticky Navigation --- */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(10, 10, 10, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-gold);
+    }
+
+    .nav-container {
+      max-width: 1300px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 30px;
+    }
+
+    .brand-logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--gold-primary);
+      text-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 30px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.85rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--gold-primary);
+    }
+
+    .nav-icons {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .icon-btn {
+      background: none;
+      color: var(--text-white);
+      font-size: 1.2rem;
+      position: relative;
+    }
+
+    .icon-btn:hover {
+      color: var(--gold-primary);
+    }
+
+    .badge {
+      position: absolute;
+      top: -6px;
+      right: -8px;
+      background: var(--gold-primary);
+      color: var(--bg-black);
+      font-size: 0.7rem;
+      font-weight: 700;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* --- View Routing System --- */
+    .page-view {
+      display: none;
+      min-height: 80vh;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .page-view.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- Hero Section --- */
+    .hero {
+      position: relative;
+      height: 85vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: linear-gradient(rgba(10,10,10,0.6), rgba(10,10,10,0.8)), url('https://images.unsplash.com/photo-1615397349754-cfa2066a298e?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+      border-bottom: 1px solid var(--border-gold);
+    }
+
+    .hero-content {
+      max-width: 800px;
+      padding: 0 20px;
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      color: var(--gold-primary);
+      margin-bottom: 20px;
+      text-shadow: 0 0 20px rgba(0,0,0,0.8);
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--text-white);
+      margin-bottom: 30px;
+      font-weight: 300;
+      letter-spacing: 1px;
+    }
+
+    /* --- Brand Story Section --- */
+    .brand-story {
+      padding: 80px 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .brand-story h2 {
+      color: var(--gold-primary);
+      font-size: 2rem;
+      margin-bottom: 25px;
+    }
+
+    .brand-story p {
+      color: var(--text-muted);
+      font-size: 1rem;
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+
+    /* --- Catalog Layout --- */
+    .catalog-container {
+      max-width: 1300px;
+      margin: 40px auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 40px;
+    }
+
+    .filter-sidebar {
+      background: var(--bg-card);
+      padding: 25px;
+      border: 1px solid var(--border-gold);
+      height: fit-content;
+    }
+
+    .filter-group {
+      margin-bottom: 25px;
+    }
+
+    .filter-group h4 {
+      color: var(--gold-primary);
+      font-size: 0.9rem;
+      margin-bottom: 15px;
+      border-bottom: 1px solid var(--border-gold);
+      padding-bottom: 5px;
+    }
+
+    .filter-option {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .filter-option input {
+      margin-right: 8px;
+      accent-color: var(--gold-primary);
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 30px;
+    }
+
+    .product-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      position: relative;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-card:hover {
+      border-color: var(--gold-primary);
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+      transform: translateY(-5px);
+    }
+
+    .product-img {
+      width: 100%;
+      height: 320px;
+      object-fit: cover;
+      border-bottom: 1px solid var(--border-gold);
+    }
+
+    .product-info {
+      padding: 20px;
+      text-align: center;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .product-title {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+
+    .product-notes {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      font-style: italic;
+    }
+
+    .product-price {
+      color: var(--gold-primary);
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    /* --- Product Detail View --- */
+    .detail-container {
+      max-width: 1100px;
+      margin: 60px auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 50px;
+    }
+
+    .detail-img {
+      width: 100%;
+      height: 500px;
+      object-fit: cover;
+      border: 1px solid var(--border-gold);
+    }
+
+    .detail-info h2 {
+      color: var(--gold-primary);
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+    }
+
+    .detail-price {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+
+    .scent-pyramid {
+      background: var(--bg-card);
+      padding: 20px;
+      border: 1px solid var(--border-gold);
+      margin: 20px 0;
+    }
+
+    .pyramid-item {
+      margin-bottom: 10px;
+      font-size: 0.85rem;
+    }
+
+    .pyramid-item strong {
+      color: var(--gold-primary);
+    }
+
+    .size-selector {
+      display: flex;
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .size-btn {
+      background: transparent;
+      border: 1px solid var(--border-gold);
+      color: var(--text-white);
+      padding: 8px 16px;
+    }
+
+    .size-btn.active, .size-btn:hover {
+      background: var(--gold-primary);
+      color: var(--bg-black);
+    }
+
+    /* --- Slide-Over Cart --- */
+    .cart-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 2000;
+      display: none;
+    }
+
+    .cart-overlay.active {
+      display: block;
+    }
+
+    .cart-drawer {
+      position: fixed;
+      top: 0;
+      right: -450px;
+      width: 420px;
+      max-width: 100%;
+      height: 100%;
+      background: var(--bg-card);
+      z-index: 2001;
+      border-left: 1px solid var(--border-gold);
+      transition: right 0.4s ease;
+      display: flex;
+      flex-direction: column;
+      padding: 25px;
+    }
+
+    .cart-drawer.active {
+      right: 0;
+    }
+
+    .cart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-gold);
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+    }
+
+    .cart-items {
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+
+    .cart-item {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding-bottom: 15px;
+    }
+
+    .cart-item img {
+      width: 70px;
+      height: 70px;
+      object-fit: cover;
+      border: 1px solid var(--border-gold);
+    }
+
+    .cart-item-details {
+      flex-grow: 1;
+    }
+
+    .cart-footer {
+      border-top: 1px solid var(--border-gold);
+      padding-top: 20px;
+    }
+
+    /* --- Multi-step Checkout --- */
+    .checkout-container {
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 30px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+      color: var(--gold-primary);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px;
+      background: #0a0a0a;
+      border: 1px solid var(--border-gold);
+      color: var(--text-white);
+      outline: none;
+    }
+
+    .form-control:focus {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 8px var(--border-gold-glow);
+    }
+
+    /* --- Admin Dashboard --- */
+    .admin-container {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: var(--bg-card);
+    }
+
+    .admin-table th, .admin-table td {
+      border: 1px solid var(--border-gold);
+      padding: 12px;
+      text-align: left;
+    }
+
+    .admin-table th {
+      background: #000;
+      color: var(--gold-primary);
+    }
+
+    /* --- Search Modal --- */
+    .search-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(10,10,10,0.95);
+      z-index: 3000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .search-modal.active {
+      display: flex;
+    }
+
+    .search-input-wrapper {
+      width: 80%;
+      max-width: 600px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 20px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid var(--gold-primary);
+      font-size: 1.5rem;
+      color: var(--text-white);
+      outline: none;
+      font-family: var(--font-serif);
+    }
+
+    /* --- Responsive Adjustments --- */
+    @media (max-width: 768px) {
+      .catalog-container, .detail-container {
+        grid-template-columns: 1fr;
+      }
+      .hero h1 {
+        font-size: 2.2rem;
+      }
+      .nav-links {
+        display: none; /* Simplification for mobile view */
+      }
+      .cart-drawer {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Navigation Header -->
+  <header>
+    <div class="nav-container">
+      <a href="#" class="brand-logo" onclick="switchView('home')">SCENTFUSED</a>
+      <ul class="nav-links">
+        <li><a href="#" onclick="switchView('home')">Home</a></li>
+        <li><a href="#" onclick="switchView('shop')">Shop All</a></li>
+        <li><a href="#" onclick="switchView('admin')">Admin Panel</a></li>
+      </ul>
+      <div class="nav-icons">
+        <button class="icon-btn" onclick="toggleSearch()"><i class="fas fa-search">🔍</i></button>
+        <button class="icon-btn" onclick="toggleCart()">
+          🛒 <span class="badge" id="cart-count">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- SEARCH MODAL -->
+  <div class="search-modal" id="searchModal">
+    <button style="position: absolute; top: 30px; right: 30px; background:none; color:#fff; font-size:2rem;" onclick="toggleSearch()">✕</button>
+    <div class="search-input-wrapper">
+      <input type="text" class="search-input" id="searchInput" placeholder="Search by scent, note, or title..." onkeyup="handleSearch(event)">
+    </div>
+  </div>
+
+  <!-- SLIDE-OVER CART CONTAINER -->
+  <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+  <div class="cart-drawer" id="cartDrawer">
+    <div class="cart-header">
+      <h3>Your Selection</h3>
+      <button class="icon-btn" onclick="toggleCart()">✕</button>
+    </div>
+    <div class="cart-items" id="cartItemsContainer">
+      <!-- Dynamic cart items rendered here -->
+    </div>
+    <div class="cart-footer">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+        <span>Subtotal</span>
+        <span id="cartSubtotal" style="color: var(--gold-primary); font-weight:600;">$0.00</span>
+      </div>
+      <button class="btn-gold" style="width: 100%;" onclick="switchView('checkout'); toggleCart();">Proceed to Checkout</button>
+    </div>
+  </div>
+
+  <!-- MAIN VIEWS CONTAINER -->
+  <main>
+    
+    <!-- 1. HOMEPAGE VIEW -->
+    <section id="view-home" class="page-view active">
+      <div class="hero">
+        <div class="hero-content">
+          <h1>Essence of Luxury</h1>
+          <p>Discover hand-crafted, artisanal olfactory masterpieces curated for the extraordinary.</p>
+          <button class="btn-gold" onclick="switchView('shop')">Explore Collections</button>
+        </div>
+      </div>
+
+      <div class="brand-story">
+        <h2>The Art of Scentfused</h2>
+        <p>Founded in Paris, SCENTFUSED bridges the ancient artistry of traditional perfumery with modern alchemy. Each bottle is a symphony of rare, sustainably sourced botanical extracts and precious aromatic resins.</p>
+      </div>
+
+      <!-- Featured Carousel/Grid Section -->
+      <div style="max-width: 1200px; margin: 0 auto; padding: 0 20px 80px 20px;">
+        <h2 style="text-align: center; color: var(--gold-primary); margin-bottom: 40px;">Featured Fragrances</h2>
+        <div class="product-grid" id="featuredGrid">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Newsletter Section -->
+      <div style="background: var(--bg-card); border-y: 1px solid var(--border-gold); padding: 60px 20px; text-align: center;">
+        <h3 style="color: var(--gold-primary); margin-bottom: 15px;">Join The Private Circle</h3>
+        <p style="color: var(--text-muted); margin-bottom: 25px;">Subscribe to receive exclusive access to limited edition drops and private olfactory tastings.</p>
+        <form onsubmit="event.preventDefault(); alert('Thank you for subscribing to SCENTFUSED.');" style="max-width: 500px; margin: 0 auto; display: flex; gap: 10px;">
+          <input type="email" class="form-control" placeholder="Enter your email address" required>
+          <button type="submit" class="btn-gold">Subscribe</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 2. CATALOG / SHOP VIEW -->
+    <section id="view-shop" class="page-view">
+      <div class="catalog-container">
+        <!-- Sidebar Filters -->
+        <aside class="filter-sidebar">
+          <div class="filter-group">
+            <h4>Fragrance Family</h4>
+            <label class="filter-option"><input type="checkbox" value="Woody" onchange="filterProducts()"> Woody</label>
+            <label class="filter-option"><input type="checkbox" value="Floral" onchange="filterProducts()"> Floral</label>
+            <label class="filter-option"><input type="checkbox" value="Oriental" onchange="filterProducts()"> Oriental</label>
+            <label class="filter-option"><input type="checkbox" value="Fresh" onchange="filterProducts()"> Fresh</label>
+          </div>
+          <div class="filter-group">
+            <h4>Gender Profile</h4>
+            <label class="filter-option"><input type="checkbox" value="Unisex" onchange="filterProducts()"> Unisex</label>
+            <label class="filter-option"><input type="checkbox" value="Maison" onchange="filterProducts()"> Pour Homme</label>
+            <label class="filter-option"><input type="checkbox" value="Femme" onchange="filterProducts()"> Pour Femme</label>
+          </div>
+        </aside>
+
+        <!-- Main Product Grid -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <p style="color: var(--text-muted);" id="product-count-label">Showing all fragrances</p>
+          </div>
+          <div class="product-grid" id="mainCatalogGrid">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. PRODUCT DETAIL VIEW -->
+    <section id="view-detail" class="page-view">
+      <div class="detail-container" id="productDetailContent">
+        <!-- Populated via JavaScript on item click -->
+      </div>
+    </section>
+
+    <!-- 4. CHECKOUT VIEW -->
+    <section id="view-checkout" class="page-view">
+      <div class="checkout-container">
+        <h2 style="color: var(--gold-primary); margin-bottom: 20px; text-align: center;">Secure Checkout</h2>
+        <form onsubmit="handleCheckout(event)">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" class="form-control" required placeholder="Lord/Lady Sterling">
+          </div>
+          <div class="form-group">
+            <label>Shipping Address</label>
+            <input type="text" class="form-control" required placeholder="123 Luxury Ave, Mayfair">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+              <label>Credit Card Number</label>
+              <input type="text" class="form-control" required placeholder="•••• •••• •••• ••••">
+            </div>
+            <div class="form-group">
+              <label>Promo Code</label>
+              <input type="text" class="form-control" placeholder="SCENT10">
+            </div>
+          </div>
+          <button type="submit" class="btn-gold" style="width: 100%; margin-top: 20px;">Complete Purchase</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 5. PRODUCT ADMIN DASHBOARD VIEW -->
+    <section id="view-admin" class="page-view">
+      <div class="admin-container">
+        <h2 style="color: var(--gold-primary); margin-bottom: 20px;">Inventory Management Dashboard</h2>
+        
+        <!-- Form to Add/Edit Products -->
+        <div style="background: var(--bg-card); padding: 25px; border: 1px solid var(--border-gold); margin-bottom: 40px;">
+          <h3 id="admin-form-title" style="color: var(--text-white); margin-bottom: 15px;">Add New Fragrance</h3>
+          <form id="productForm" onsubmit="saveProduct(event)">
+            <input type="hidden" id="admin-p-id">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+              <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="admin-p-title" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label>Price ($)</label>
+                <input type="number" id="admin-p-price" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label>Family</label>
+                <select id="admin-p-family" class="form-control">
+                  <option value="Woody">Woody</option>
+                  <option value="Floral">Floral</option>
+                  <option value="Oriental">Oriental</option>
+                  <option value="Fresh">Fresh</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Image URL</label>
+                <input type="text" id="admin-p-img" class="form-control" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Scent Notes Breakdown (Top, Heart, Base)</label>
+              <input type="text" id="admin-p-notes" class="form-control" placeholder="e.g. Saffron, Damask Rose, Oud Wood" required>
+            </div>
+            <button type="submit" class="btn-gold" id="admin-submit-btn">Save Product</button>
+            <button type="button" class="btn-outline" onclick="resetAdminForm()" style="margin-left: 10px;">Reset</button>
+          </form>
+        </div>
+
+        <!-- Inventory List -->
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Title</th>
+              <th>Family</th>
+              <th>Price</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="adminTableBody">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer style="background: #000; border-top: 1px solid var(--border-gold); padding: 40px 20px; text-align: center; margin-top: 60px;">
+    <p class="brand-logo" style="font-size: 1.2rem; margin-bottom: 10px;">SCENTFUSED</p>
+    <p style="color: var(--text-muted); font-size: 0.8rem;">© 2026 SCENTFUSED Haute Parfumerie. All rights reserved.</p>
+  </footer>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // --- Mock Data Store ---
+    let products = [
+      {
+        id: 1,
+        title: "Oud Royale",
+        family: "Woody",
+        price: 320,
+        img: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80",
+        notes: "Smoky Amber, Rose, Rare Cambodian Oud",
+        top: "Bergamot, Saffron",
+        heart: "Damask Rose, Patchouli",
+        base: "Agarwood (Oud), Amber, Cedar"
+      },
+      {
+        id: 2,
+        title: "Velvet Jasmine",
+        family: "Floral",
+        price: 280,
+        img: "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=600&q=80",
+        notes: "Night-blooming Jasmine, Vanilla, Sandalwood",
+        top: "Neroli, Mandarin",
+        heart: "Sambac Jasmine, Tuberose",
+        base: "Bourbon Vanilla, Mysore Sandalwood"
+      },
+      {
+        id: 3,
+        title: "Soleil d'Orient",
+        family: "Oriental",
+        price: 350,
+        img: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=600&q=80",
+        notes: "Incense, Spiced Cardamom, Golden Amber",
+        top: "Cardamom, Pink Pepper",
+        heart: "Incense, Myrrh",
+        base: "Golden Amber, Labdanum"
+      }
+    ];
+
+    let cart = [];
+
+    // --- Navigation & View Manager ---
+    function switchView(viewName) {
+      document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
+      const activeView = document.getElementById(`view-${viewName}`);
+      if(activeView) activeView.classList.add('active');
+      window.scrollTo(0, 0);
+
+      if(viewName === 'shop') renderCatalog(products);
+      if(viewName === 'home') renderFeatured();
+      if(viewName === 'admin') renderAdminTable();
+    }
+
+    // --- Render Product Cards ---
+    function createProductCardHtml(product) {
+      return `
+        <div class="product-card">
+          <img src="${product.img}" alt="${product.title}" class="product-img">
+          <div class="product-info">
+            <div>
+              <div class="product-title">${product.title}</div>
+              <div class="product-notes">${product.notes}</div>
+            </div>
+            <div>
+              <div class="product-price">$${product.price}</div>
+              <div class="card-actions">
+                <button class="btn-outline" style="padding: 8px 12px;" onclick="openProductDetail(${product.id})">View</button>
+                <button class="btn-gold" style="padding: 8px 12px;" onclick="addToCart(${product.id})">Add to Cart</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderFeatured() {
+      const container = document.getElementById('featuredGrid');
+      container.innerHTML = products.slice(0, 3).map(p => createProductCardHtml(p)).join('');
+    }
+
+    function renderCatalog(items) {
+      const container = document.getElementById('mainCatalogGrid');
+      container.innerHTML = items.map(p => createProductCardHtml(p)).join('');
+      document.getElementById('product-count-label').innerText = `Showing ${items.length} fragrance(s)`;
+    }
+
+    // --- Product Detail Render ---
+    function openProductDetail(id) {
+      const product = products.find(p => p.id === id);
+      if(!product) return;
+
+      const container = document.getElementById('productDetailContent');
+      container.innerHTML = `
+        <div>
+          <img src="${product.img}" alt="${product.title}" class="detail-img">
+        </div>
+        <div class="detail-info">
+          <h2>${product.title}</h2>
+          <div class="detail-price" style="color: var(--gold-primary);">$${product.price}</div>
+          <p style="color: var(--text-muted); margin-bottom: 20px;">An exceptional extrait de parfum representing the pinnacle of olfactory art.</p>
+          
+          <div class="scent-pyramid">
+            <h4 style="color: var(--gold-primary); margin-bottom: 10px;">Olfactory Notes Breakdown</h4>
+            <div class="pyramid-item"><strong>Top Notes:</strong> ${product.top || 'Citrus, Spices'}</div>
+            <div class="pyramid-item"><strong>Heart Notes:</strong> ${product.heart || 'Rare Florals'}</div>
+            <div class="pyramid-item"><strong>Base Notes:</strong> ${product.base || 'Precious Woods'}</div>
+          </div>
+
+          <label style="font-size:0.8rem; color: var(--gold-primary);">Select Volume:</label>
+          <div class="size-selector">
+            <button class="size-btn active">50ml</button>
+            <button class="size-btn">100ml</button>
+          </div>
+
+          <button class="btn-gold" style="width: 100%; margin-top: 20px;" onclick="addToCart(${product.id})">Add To Cart</button>
+        </div>
+      `;
+      switchView('detail');
+    }
+
+    // --- Filtering Logic ---
+    function filterProducts() {
+      const checkboxes = document.querySelectorAll('.filter-sidebar input[type="checkbox"]:checked');
+      const selectedFamilies = Array.from(checkboxes).map(cb => cb.value);
+
+      if(selectedFamilies.length === 0) {
+        renderCatalog(products);
+      } else {
+        const filtered = products.filter(p => selectedFamilies.includes(p.family));
+        renderCatalog(filtered);
+      }
+    }
+
+    // --- Cart System ---
+    function toggleCart() {
+      document.getElementById('cartOverlay').classList.toggle('active');
+      document.getElementById('cartDrawer').classList.toggle('active');
+    }
+
+    function addToCart(id) {
+      const product = products.find(p => p.id === id);
+      const existing = cart.find(item => item.id === id);
+
+      if(existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({...product, qty: 1});
+      }
+      updateCartUi();
+      toggleCart();
+    }
+
+    function updateCartUi() {
+      const container = document.getElementById('cartItemsContainer');
+      let subtotal = 0;
+      let totalCount = 0;
+
+      container.innerHTML = cart.map(item => {
+        subtotal += item.price * item.qty;
+        totalCount += item.qty;
+        return `
+          <div class="cart-item">
+            <img src="${item.img}" alt="${item.title}">
+            <div class="cart-item-details">
+              <div style="font-weight: 600;">${item.title}</div>
+              <div style="color: var(--gold-primary);">$${item.price} x ${item.qty}</div>
+            </div>
+            <button style="background:none; color:red;" onclick="removeFromCart(${item.id})">✕</button>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('cartSubtotal').innerText = `$${subtotal.toFixed(2)}`;
+      document.getElementById('cart-count').innerText = totalCount;
+    }
+
+    function removeFromCart(id) {
+      cart = cart.filter(item => item.id !== id);
+      updateCartUi();
+    }
+
+    function handleCheckout(e) {
+      e.preventDefault();
+      alert('Order placed successfully! Welcome to the world of SCENTFUSED.');
+      cart = [];
+      updateCartUi();
+      switchView('home');
+    }
+
+    // --- Search Feature ---
+    function toggleSearch() {
+      document.getElementById('searchModal').classList.toggle('active');
+    }
+
+    function handleSearch(e) {
+      const query = e.target.value.toLowerCase();
+      const filtered = products.filter(p => 
+        p.title.toLowerCase().includes(query) || 
+        p.notes.toLowerCase().includes(query)
+      );
+      renderCatalog(filtered);
+      if(e.key === 'Enter') {
+        toggleSearch();
+        switchView('shop');
+      }
+    }
+
+    // --- Product Admin CRUD Logic ---
+    function renderAdminTable() {
+      const tbody = document.getElementById('adminTableBody');
+      tbody.innerHTML = products.map(p => `
+        <tr>
+          <td><img src="${p.img}" width="40" height="40" style="object-fit:cover;"></td>
+          <td>${p.title}</td>
+          <td>${p.family}</td>
+          <td>$${p.price}</td>
+          <td>
+            <button class="btn-outline" style="padding: 4px 8px;" onclick="editProduct(${p.id})">Edit</button>
+            <button class="btn-gold" style="padding: 4px 8px; background: red; border:none; color:white;" onclick="deleteProduct(${p.id})">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function saveProduct(e) {
+      e.preventDefault();
+      const id = document.getElementById('admin-p-id').value;
+      const title = document.getElementById('admin-p-title').value;
+      const price = parseFloat(document.getElementById('admin-p-price').value);
+      const family = document.getElementById('admin-p-family').value;
+      const img = document.getElementById('admin-p-img').value;
+      const notes = document.getElementById('admin-p-notes').value;
+
+      if(id) {
+        // Edit existing product
+        const index = products.findIndex(p => p.id == id);
+        products[index] = { ...products[index], title, price, family, img, notes };
+      } else {
+        // Add new product
+        const newProduct = {
+          id: Date.now(),
+          title,
+          price,
+          family,
+          img,
+          notes,
+          top: "Custom Top Note",
+          heart: "Custom Heart Note",
+          base: "Custom Base Note"
+        };
+        products.push(newProduct);
+      }
+
+      resetAdminForm();
+      renderAdminTable();
+    }
+
+    function editProduct(id) {
+      const p = products.find(item => item.id === id);
+      if(!p) return;
+
+      document.getElementById('admin-p-id').value = p.id;
+      document.getElementById('admin-p-title').value = p.title;
+      document.getElementById('admin-p-price').value = p.price;
+      document.getElementById('admin-p-family').value = p.family;
+      document.getElementById('admin-p-img').value = p.img;
+      document.getElementById('admin-p-notes').value = p.notes;
+      
+      document.getElementById('admin-form-title').innerText = "Edit Fragrance";
+      document.getElementById('admin-submit-btn').innerText = "Update Fragrance";
+    }
+
+    function deleteProduct(id) {
+      products = products.filter(p => p.id !== id);
+      renderAdminTable();
+    }
+
+    function resetAdminForm() {
+      document.getElementById('productForm').reset();
+      document.getElementById('admin-p-id').value = '';
+      document.getElementById('admin-form-title').innerText = "Add New Fragrance";
+      document.getElementById('admin-submit-btn').innerText = "Save Product";
+    }
+
+    // --- Initial Load ---
+    renderFeatured();
+  </script>
+</body>
+</html>
