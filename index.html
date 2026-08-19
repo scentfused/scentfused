@@ -839,214 +839,241 @@ For businesses and entrepreneurs, ScentFused also offers bulk orders and “Buil
 
   <!-- JAVASCRIPT LOGIC -->
   <script>
-    // --- Mock Data Store ---
-    let products = [
-      {
-        id: 1,
-        title: "Oud Royale",
-        family: "Woody",
-        price: 320,
-        img: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80",
-        notes: "Smoky Amber, Rose, Rare Cambodian Oud",
-        top: "Bergamot, Saffron",
-        heart: "Damask Rose, Patchouli",
-        base: "Agarwood (Oud), Amber, Cedar"
-      },
-      {
-        id: 2,
-        title: "Velvet Jasmine",
-        family: "Floral",
-        price: 280,
-        img: "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=600&q=80",
-        notes: "Night-blooming Jasmine, Vanilla, Sandalwood",
-        top: "Neroli, Mandarin",
-        heart: "Sambac Jasmine, Tuberose",
-        base: "Bourbon Vanilla, Mysore Sandalwood"
-      },
-      {
-        id: 3,
-        title: "Soleil d'Orient",
-        family: "Oriental",
-        price: 350,
-        img: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=600&q=80",
-        notes: "Incense, Spiced Cardamom, Golden Amber",
-        top: "Cardamom, Pink Pepper",
-        heart: "Incense, Myrrh",
-        base: "Golden Amber, Labdanum"
-      }
-    ];
-
-    let cart = [];
-
-    // --- Navigation & View Manager ---
-    function switchView(viewName) {
-      document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
-      const activeView = document.getElementById(`view-${viewName}`);
-      if(activeView) activeView.classList.add('active');
-      window.scrollTo(0, 0);
-
-      if(viewName === 'shop') renderCatalog(products);
-      if(viewName === 'home') renderFeatured();
-      if(viewName === 'admin') renderAdminTable();
+  // --- Mock Data Store ---
+  let products = [
+    {
+      id: 1,
+      title: "Oud Royale",
+      family: "Woody",
+      price: 320,
+      img: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80",
+      notes: "Smoky Amber, Rose, Rare Cambodian Oud",
+      top: "Bergamot, Saffron",
+      heart: "Damask Rose, Patchouli",
+      base: "Agarwood (Oud), Amber, Cedar"
+    },
+    {
+      id: 2,
+      title: "Velvet Jasmine",
+      family: "Floral",
+      price: 280,
+      img: "https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=600&q=80",
+      notes: "Night-blooming Jasmine, Vanilla, Sandalwood",
+      top: "Neroli, Mandarin",
+      heart: "Sambac Jasmine, Tuberose",
+      base: "Bourbon Vanilla, Mysore Sandalwood"
+    },
+    {
+      id: 3,
+      title: "Soleil d'Orient",
+      family: "Oriental",
+      price: 350,
+      img: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&w=600&q=80",
+      notes: "Incense, Spiced Cardamom, Golden Amber",
+      top: "Cardamom, Pink Pepper",
+      heart: "Incense, Myrrh",
+      base: "Golden Amber, Labdanum"
     }
+  ];
 
-    // --- Render Product Cards ---
-    function createProductCardHtml(product) {
-      return `
-        <div class="product-card">
-          <img src="${product.img}" alt="${product.title}" class="product-img">
-          <div class="product-info">
-            <div>
-              <div class="product-title">${product.title}</div>
-              <div class="product-notes">${product.notes}</div>
-            </div>
-            <div>
-              <div class="product-price">$${product.price}</div>
-              <div class="card-actions">
-                <button class="btn-outline" style="padding: 8px 12px;" onclick="openProductDetail(${product.id})">View</button>
-                <button class="btn-gold" style="padding: 8px 12px;" onclick="addToCart(${product.id})">Add to Cart</button>
-              </div>
+  let cart = [];
+
+  // --- Navigation & View Manager ---
+  function switchView(viewName) {
+    document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
+    const activeView = document.getElementById(`view-${viewName}`);
+    if(activeView) activeView.classList.add('active');
+    window.scrollTo(0, 0);
+
+    if(viewName === 'shop') renderCatalog(products);
+    if(viewName === 'home') renderFeatured();
+    if(viewName === 'admin') renderAdminTable();
+  }
+
+  // --- Render Product Cards ---
+  function createProductCardHtml(product) {
+    return `
+      <div class="product-card">
+        <img src="${product.img}" alt="${product.title}" class="product-img">
+        <div class="product-info">
+          <div>
+            <div class="product-title">${product.title}</div>
+            <div class="product-notes">${product.notes}</div>
+          </div>
+          <div>
+            <div class="product-price">$${product.price}</div>
+            <div class="card-actions">
+              <button class="btn-outline" style="padding: 8px 12px;" onclick="openProductDetail(${product.id})">View</button>
+              <button class="btn-gold" style="padding: 8px 12px;" onclick="addToCart(${product.id})">Add to Cart</button>
             </div>
           </div>
         </div>
-      `;
-    }
+      </div>
+    `;
+  }
 
-    function renderFeatured() {
-      const container = document.getElementById('featuredGrid');
-      container.innerHTML = products.slice(0, 3).map(p => createProductCardHtml(p)).join('');
-    }
+  function renderFeatured() {
+    const container = document.getElementById('featuredGrid');
+    if (container) container.innerHTML = products.slice(0, 3).map(p => createProductCardHtml(p)).join('');
+  }
 
-    function renderCatalog(items) {
-      const container = document.getElementById('mainCatalogGrid');
+  function renderCatalog(items) {
+    const container = document.getElementById('mainCatalogGrid');
+    if (container) {
       container.innerHTML = items.map(p => createProductCardHtml(p)).join('');
       document.getElementById('product-count-label').innerText = `Showing ${items.length} fragrance(s)`;
     }
+  }
 
-    // --- Product Detail Render ---
-    function openProductDetail(id) {
-      const product = products.find(p => p.id === id);
-      if(!product) return;
+  // --- Product Detail Render ---
+  function openProductDetail(id) {
+    const product = products.find(p => p.id === id);
+    if(!product) return;
 
-      const container = document.getElementById('productDetailContent');
-      container.innerHTML = `
-        <div>
-          <img src="${product.img}" alt="${product.title}" class="detail-img">
+    const container = document.getElementById('productDetailContent');
+    container.innerHTML = `
+      <div>
+        <img src="${product.img}" alt="${product.title}" class="detail-img">
+      </div>
+      <div class="detail-info">
+        <h2>${product.title}</h2>
+        <div class="detail-price" style="color: var(--gold-primary);">$${product.price}</div>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">An exceptional extrait de parfum representing the pinnacle of olfactory art.</p>
+        
+        <div class="scent-pyramid">
+          <h4 style="color: var(--gold-primary); margin-bottom: 10px;">Olfactory Notes Breakdown</h4>
+          <div class="pyramid-item"><strong>Top Notes:</strong> ${product.top || 'Citrus, Spices'}</div>
+          <div class="pyramid-item"><strong>Heart Notes:</strong> ${product.heart || 'Rare Florals'}</div>
+          <div class="pyramid-item"><strong>Base Notes:</strong> ${product.base || 'Precious Woods'}</div>
         </div>
-        <div class="detail-info">
-          <h2>${product.title}</h2>
-          <div class="detail-price" style="color: var(--gold-primary);">$${product.price}</div>
-          <p style="color: var(--text-muted); margin-bottom: 20px;">An exceptional extrait de parfum representing the pinnacle of olfactory art.</p>
-          
-          <div class="scent-pyramid">
-            <h4 style="color: var(--gold-primary); margin-bottom: 10px;">Olfactory Notes Breakdown</h4>
-            <div class="pyramid-item"><strong>Top Notes:</strong> ${product.top || 'Citrus, Spices'}</div>
-            <div class="pyramid-item"><strong>Heart Notes:</strong> ${product.heart || 'Rare Florals'}</div>
-            <div class="pyramid-item"><strong>Base Notes:</strong> ${product.base || 'Precious Woods'}</div>
-          </div>
 
-          <label style="font-size:0.8rem; color: var(--gold-primary);">Select Volume:</label>
-          <div class="size-selector">
-            <button class="size-btn active">50ml</button>
-            <button class="size-btn">100ml</button>
-          </div>
+        <label style="font-size:0.8rem; color: var(--gold-primary);">Select Volume:</label>
+        <div class="size-selector">
+          <button class="size-btn active">50ml</button>
+          <button class="size-btn">100ml</button>
+        </div>
 
-          <button class="btn-gold" style="width: 100%; margin-top: 20px;" onclick="addToCart(${product.id})">Add To Cart</button>
+        <button class="btn-gold" style="width: 100%; margin-top: 20px;" onclick="addToCart(${product.id})">Add To Cart</button>
+      </div>
+    `;
+    switchView('detail');
+  }
+
+  // --- Filtering Logic ---
+  function filterProducts() {
+    const checkboxes = document.querySelectorAll('.filter-sidebar input[type="checkbox"]:checked');
+    const selectedFamilies = Array.from(checkboxes).map(cb => cb.value);
+
+    if(selectedFamilies.length === 0) {
+      renderCatalog(products);
+    } else {
+      const filtered = products.filter(p => selectedFamilies.includes(p.family));
+      renderCatalog(filtered);
+    }
+  }
+
+  // --- Cart System ---
+  function toggleCart() {
+    document.getElementById('cartOverlay').classList.toggle('active');
+    document.getElementById('cartDrawer').classList.toggle('active');
+  }
+
+  function addToCart(id) {
+    const product = products.find(p => p.id === id);
+    const existing = cart.find(item => item.id === id);
+
+    if(existing) {
+      existing.qty += 1;
+    } else {
+      cart.push({...product, qty: 1});
+    }
+    updateCartUi();
+    toggleCart();
+  }
+
+  function updateCartUi() {
+    const container = document.getElementById('cartItemsContainer');
+    let subtotal = 0;
+    let totalCount = 0;
+
+    container.innerHTML = cart.map(item => {
+      subtotal += item.price * item.qty;
+      totalCount += item.qty;
+      return `
+        <div class="cart-item">
+          <img src="${item.img}" alt="${item.title}">
+          <div class="cart-item-details">
+            <div style="font-weight: 600;">${item.title}</div>
+            <div style="color: var(--gold-primary);">$${item.price} x ${item.qty}</div>
+          </div>
+          <button style="background:none; color:red;" onclick="removeFromCart(${item.id})">✕</button>
         </div>
       `;
-      switchView('detail');
+    }).join('');
+
+    document.getElementById('cartSubtotal').innerText = `$${subtotal.toFixed(2)}`;
+    document.getElementById('cart-count').innerText = totalCount;
+  }
+
+  function removeFromCart(id) {
+    cart = cart.filter(item => item.id !== id);
+    updateCartUi();
+  }
+
+  function handleCheckout(e) {
+    e.preventDefault();
+    alert('Order placed successfully! Welcome to the world of SCENTFUSED.');
+    cart = [];
+    updateCartUi();
+    switchView('home');
+  }
+
+  // --- Search Feature ---
+  function toggleSearch() {
+    document.getElementById('searchModal').classList.toggle('active');
+  }
+
+  function handleSearch(e) {
+    const query = e.target.value.toLowerCase();
+    const filtered = products.filter(p => 
+      p.title.toLowerCase().includes(query) || 
+      p.notes.toLowerCase().includes(query)
+    );
+    renderCatalog(filtered);
+    if(e.key === 'Enter') {
+      toggleSearch();
+      switchView('shop');
     }
+  }
 
-    // --- Filtering Logic ---
-    function filterProducts() {
-      const checkboxes = document.querySelectorAll('.filter-sidebar input[type="checkbox"]:checked');
-      const selectedFamilies = Array.from(checkboxes).map(cb => cb.value);
-
-      if(selectedFamilies.length === 0) {
-        renderCatalog(products);
-      } else {
-        const filtered = products.filter(p => selectedFamilies.includes(p.family));
-        renderCatalog(filtered);
-      }
+  // --- Image Preview Handler ---
+  function previewSelectedImage(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('admin-p-img').value = e.target.result;
+        document.getElementById('admin-p-img-preview').src = e.target.result;
+        document.getElementById('image-preview-wrapper').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
     }
+  }
 
-    // --- Cart System ---
-    function toggleCart() {
-      document.getElementById('cartOverlay').classList.toggle('active');
-      document.getElementById('cartDrawer').classList.toggle('active');
-    }
+  // --- Helper to convert file to Base64 asynchronously ---
+  function readFileAsBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+      reader.readAsDataURL(file);
+    });
+  }
 
-    function addToCart(id) {
-      const product = products.find(p => p.id === id);
-      const existing = cart.find(item => item.id === id);
-
-      if(existing) {
-        existing.qty += 1;
-      } else {
-        cart.push({...product, qty: 1});
-      }
-      updateCartUi();
-      toggleCart();
-    }
-
-    function updateCartUi() {
-      const container = document.getElementById('cartItemsContainer');
-      let subtotal = 0;
-      let totalCount = 0;
-
-      container.innerHTML = cart.map(item => {
-        subtotal += item.price * item.qty;
-        totalCount += item.qty;
-        return `
-          <div class="cart-item">
-            <img src="${item.img}" alt="${item.title}">
-            <div class="cart-item-details">
-              <div style="font-weight: 600;">${item.title}</div>
-              <div style="color: var(--gold-primary);">$${item.price} x ${item.qty}</div>
-            </div>
-            <button style="background:none; color:red;" onclick="removeFromCart(${item.id})">✕</button>
-          </div>
-        `;
-      }).join('');
-
-      document.getElementById('cartSubtotal').innerText = `$${subtotal.toFixed(2)}`;
-      document.getElementById('cart-count').innerText = totalCount;
-    }
-
-    function removeFromCart(id) {
-      cart = cart.filter(item => item.id !== id);
-      updateCartUi();
-    }
-
-    function handleCheckout(e) {
-      e.preventDefault();
-      alert('Order placed successfully! Welcome to the world of SCENTFUSED.');
-      cart = [];
-      updateCartUi();
-      switchView('home');
-    }
-
-    // --- Search Feature ---
-    function toggleSearch() {
-      document.getElementById('searchModal').classList.toggle('active');
-    }
-
-    function handleSearch(e) {
-      const query = e.target.value.toLowerCase();
-      const filtered = products.filter(p => 
-        p.title.toLowerCase().includes(query) || 
-        p.notes.toLowerCase().includes(query)
-      );
-      renderCatalog(filtered);
-      if(e.key === 'Enter') {
-        toggleSearch();
-        switchView('shop');
-      }
-    }
-
-    // --- Product Admin CRUD Logic ---
-    function renderAdminTable() {
-      const tbody = document.getElementById('adminTableBody');
+  // --- Product Admin CRUD Logic ---
+  function renderAdminTable() {
+    const tbody = document.getElementById('adminTableBody');
+    if (tbody) {
       tbody.innerHTML = products.map(p => `
         <tr>
           <td><img src="${p.img}" width="40" height="40" style="object-fit:cover;"></td>
@@ -1060,69 +1087,110 @@ For businesses and entrepreneurs, ScentFused also offers bulk orders and “Buil
         </tr>
       `).join('');
     }
+  }
 
-    function saveProduct(e) {
-      e.preventDefault();
-      const id = document.getElementById('admin-p-id').value;
-      const title = document.getElementById('admin-p-title').value;
-      const price = parseFloat(document.getElementById('admin-p-price').value);
-      const family = document.getElementById('admin-p-family').value;
-      const img = document.getElementById('admin-p-img').value;
-      const notes = document.getElementById('admin-p-notes').value;
+  async function saveProduct(e) {
+    e.preventDefault();
+    const id = document.getElementById('admin-p-id').value;
+    const title = document.getElementById('admin-p-title').value;
+    const price = parseFloat(document.getElementById('admin-p-price').value);
+    const family = document.getElementById('admin-p-family').value;
+    const notes = document.getElementById('admin-p-notes').value;
+    
+    // Check for uploaded file
+    const fileInput = document.getElementById('admin-p-img-file');
+    let imgSrc = document.getElementById('admin-p-img').value;
 
-      if(id) {
-        // Edit existing product
-        const index = products.findIndex(p => p.id == id);
-        products[index] = { ...products[index], title, price, family, img, notes };
-      } else {
-        // Add new product
-        const newProduct = {
-          id: Date.now(),
-          title,
-          price,
-          family,
-          img,
-          notes,
-          top: "Custom Top Note",
-          heart: "Custom Heart Note",
-          base: "Custom Base Note"
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+      imgSrc = await readFileAsBase64(fileInput.files[0]);
+    }
+
+    // Default fallback image if no image was uploaded or provided
+    if (!imgSrc) {
+      imgSrc = "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80";
+    }
+
+    if (id) {
+      // Edit existing product
+      const index = products.findIndex(p => p.id == id);
+      if (index !== -1) {
+        products[index] = { 
+          ...products[index], 
+          title, 
+          price, 
+          family, 
+          img: imgSrc, 
+          notes 
         };
-        products.push(newProduct);
       }
-
-      resetAdminForm();
-      renderAdminTable();
+    } else {
+      // Add new product
+      const notesArray = notes.split(',').map(n => n.trim());
+      const newProduct = {
+        id: Date.now(),
+        title,
+        price,
+        family,
+        img: imgSrc,
+        notes,
+        top: notesArray[0] || "Custom Top Note",
+        heart: notesArray[1] || "Custom Heart Note",
+        base: notesArray[2] || "Custom Base Note"
+      };
+      products.push(newProduct);
     }
 
-    function editProduct(id) {
-      const p = products.find(item => item.id === id);
-      if(!p) return;
-
-      document.getElementById('admin-p-id').value = p.id;
-      document.getElementById('admin-p-title').value = p.title;
-      document.getElementById('admin-p-price').value = p.price;
-      document.getElementById('admin-p-family').value = p.family;
-      document.getElementById('admin-p-img').value = p.img;
-      document.getElementById('admin-p-notes').value = p.notes;
-      
-      document.getElementById('admin-form-title').innerText = "Edit Fragrance";
-      document.getElementById('admin-submit-btn').innerText = "Update Fragrance";
-    }
-
-    function deleteProduct(id) {
-      products = products.filter(p => p.id !== id);
-      renderAdminTable();
-    }
-
-    function resetAdminForm() {
-      document.getElementById('productForm').reset();
-      document.getElementById('admin-p-id').value = '';
-      document.getElementById('admin-form-title').innerText = "Add New Fragrance";
-      document.getElementById('admin-submit-btn').innerText = "Save Product";
-    }
-
-    // --- Initial Load ---
+    resetAdminForm();
+    renderAdminTable();
+    renderCatalog(products);
     renderFeatured();
-  </script>
+    alert("Product saved successfully!");
+  }
+
+  function editProduct(id) {
+    const p = products.find(item => item.id === id);
+    if(!p) return;
+
+    document.getElementById('admin-p-id').value = p.id;
+    document.getElementById('admin-p-title').value = p.title;
+    document.getElementById('admin-p-price').value = p.price;
+    document.getElementById('admin-p-family').value = p.family;
+    document.getElementById('admin-p-img').value = p.img;
+    document.getElementById('admin-p-notes').value = p.notes;
+
+    if (p.img) {
+      document.getElementById('admin-p-img-preview').src = p.img;
+      document.getElementById('image-preview-wrapper').style.display = 'block';
+    }
+    
+    document.getElementById('admin-form-title').innerText = "Edit Fragrance";
+    document.getElementById('admin-submit-btn').innerText = "Update Fragrance";
+  }
+
+  function deleteProduct(id) {
+    products = products.filter(p => p.id !== id);
+    renderAdminTable();
+    renderCatalog(products);
+    renderFeatured();
+  }
+
+  function resetAdminForm() {
+    document.getElementById('productForm').reset();
+    document.getElementById('admin-p-id').value = '';
+    document.getElementById('admin-p-img').value = '';
+    
+    const previewWrapper = document.getElementById('image-preview-wrapper');
+    if (previewWrapper) previewWrapper.style.display = 'none';
+    
+    const previewImg = document.getElementById('admin-p-img-preview');
+    if (previewImg) previewImg.src = '';
+
+    document.getElementById('admin-form-title').innerText = "Add New Fragrance";
+    document.getElementById('admin-submit-btn').innerText = "Save Product";
+  }
+
+  // --- Initial Load ---
+  renderFeatured();
+</script>
 </body>
 </html>
