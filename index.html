@@ -666,8 +666,10 @@
       </div>
 
       <div class="brand-story">
-        <h2>The Art of Scentfused</h2>
-        <p>Founded in Paris, SCENTFUSED bridges the ancient artistry of traditional perfumery with modern alchemy. Each bottle is a symphony of rare, sustainably sourced botanical extracts and precious aromatic resins.</p>
+        <h2>Fused by Scent, Defined by You</h2>
+        <p>ScentFused is a modern fragrance house built around the art of scent fusion. We bring together two or more distinctive fragrance profiles and carefully fuse them into unique creations that offer something beyond a conventional perfume.
+Our collection extends beyond perfumes, offering fragrance oil concentrates, scented soaps, scented body washes, and thoughtfully curated gift sets—all created with the same passion for distinctive scent experiences.
+For businesses and entrepreneurs, ScentFused also offers bulk orders and “Build Your Own Brand” services, helping you create your own fragrance products with customized options for your brand.</p>
       </div>
 
       <!-- Featured Carousel/Grid Section -->
@@ -696,10 +698,13 @@
         <aside class="filter-sidebar">
           <div class="filter-group">
             <h4>Fragrance Family</h4>
-            <label class="filter-option"><input type="checkbox" value="Woody" onchange="filterProducts()"> Woody</label>
-            <label class="filter-option"><input type="checkbox" value="Floral" onchange="filterProducts()"> Floral</label>
-            <label class="filter-option"><input type="checkbox" value="Oriental" onchange="filterProducts()"> Oriental</label>
-            <label class="filter-option"><input type="checkbox" value="Fresh" onchange="filterProducts()"> Fresh</label>
+            <label class="filter-option"><input type="checkbox" value="Fresh" onchange="filterProducts()"> Citrusy</label>
+            <label class="filter-option"><input type="checkbox" value="Fresh" onchange="filterProducts()"> Floral</label>
+            <label class="filter-option"><input type="checkbox" value="Woody" onchange="filterProducts()"> Fresh</label>
+            <label class="filter-option"><input type="checkbox" value="Fresh" onchange="filterProducts()"> Fruity</label>
+            <label class="filter-option"><input type="checkbox" value="Fresh" onchange="filterProducts()"> Oriental</label>
+            <label class="filter-option"><input type="checkbox" value="Fresh" onchange="filterProducts()"> Oud</label>
+            <label class="filter-option"><input type="checkbox" value="Fresh" onchange="filterProducts()"> Woody</label>
           </div>
           <div class="filter-group">
             <h4>Gender Profile</h4>
@@ -778,25 +783,33 @@
               <div class="form-group">
                 <label>Family</label>
                 <select id="admin-p-family" class="form-control">
-                  <option value="Woody">Woody</option>
+                  <option value="Woody">Citrussy</option>
                   <option value="Floral">Floral</option>
+                  <option value="Floral">Fresh</option>
+                  <option value="Floral">Fruity</option>
                   <option value="Oriental">Oriental</option>
-                  <option value="Fresh">Fresh</option>
+                  <option value="Floral">Oud</option>
+                  <option value="Fresh">Woodyu</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label>Image URL</label>
-                <input type="text" id="admin-p-img" class="form-control" required>
+             <div class="form-group">
+                <label>Upload Image</label>
+                <input type="file" id="admin-p-img-file" class="form-control" accept="image/*" onchange="previewSelectedImage(event)">
+                <!-- Hidden input to store image data string (Base64 or URL) -->
+                <input type="hidden" id="admin-p-img">
+                <!-- Image preview container -->
+                <div id="image-preview-wrapper" style="margin-top: 10px; display: none;">
+                  <img id="admin-p-img-preview" src="" alt="Preview" style="width: 80px; height: 80px; object-fit: cover; border: 1px solid var(--border-gold);">
+                </div>
               </div>
-            </div>
-            <div class="form-group">
-              <label>Scent Notes Breakdown (Top, Heart, Base)</label>
-              <input type="text" id="admin-p-notes" class="form-control" placeholder="e.g. Saffron, Damask Rose, Oud Wood" required>
-            </div>
-            <button type="submit" class="btn-gold" id="admin-submit-btn">Save Product</button>
-            <button type="button" class="btn-outline" onclick="resetAdminForm()" style="margin-left: 10px;">Reset</button>
-          </form>
-        </div>
+              </div>
+              <div class="form-group">
+                <label>Scent Notes Breakdown (Top, Heart, Base)</label>
+                <input type="text" id="admin-p-notes" class="form-control" placeholder="e.g. Saffron, Damask Rose, Oud Wood" required>
+              </div>
+              <button type="submit" class="btn-gold" id="admin-submit-btn">Save Product</button>
+              <button type="button" class="btn-outline" onclick="resetAdminForm()" style="margin-left: 10px;">Reset</button>
+              </form>
 
         <!-- Inventory List -->
         <table class="admin-table">
