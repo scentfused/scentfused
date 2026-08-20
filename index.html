@@ -785,10 +785,23 @@
                 </select>
               </div>
               <div class="form-group">
-                <label>Image URL</label>
-                <input type="text" id="admin-p-img" class="form-control" required>
-              </div>
-            </div>
+  <label>Upload Image</label>
+  <input type="file" id="admin-p-img-file" class="form-control" accept="image/*" onchange="previewSelectedImage(event)">
+  <!-- Hidden input to store image data string (Base64 or URL) -->
+  <input type="hidden" id="admin-p-img">
+  <!-- Image preview container -->
+  <div id="image-preview-wrapper" style="margin-top: 10px; display: none;">
+    <img id="admin-p-img-preview" src="" alt="Preview" style="width: 80px; height: 80px; object-fit: cover; border: 1px solid var(--border-gold);">
+  </div>
+</div>
+</div>
+<div class="form-group">
+  <label>Scent Notes Breakdown (Top, Heart, Base)</label>
+  <input type="text" id="admin-p-notes" class="form-control" placeholder="e.g. Saffron, Damask Rose, Oud Wood" required>
+</div>
+<button type="submit" class="btn-gold" id="admin-submit-btn">Save Product</button>
+<button type="button" class="btn-outline" onclick="resetAdminForm()" style="margin-left: 10px;">Reset</button>
+</form>
             <div class="form-group">
               <label>Scent Notes Breakdown (Top, Heart, Base)</label>
               <input type="text" id="admin-p-notes" class="form-control" placeholder="e.g. Saffron, Damask Rose, Oud Wood" required>
