@@ -3,7 +3,18 @@ import { useState } from 'react'
 const WHATSAPP_NUMBER = '923022726002' // no + or spaces, just digits with country code
 const DEFAULT_MESSAGE = "Hi! I'd like to ask about a product on Scentfused."
 const ENCODED_MESSAGE = encodeURIComponent(DEFAULT_MESSAGE)
+
+// Android can target one specific app by its exact package name, bypassing
+// any "always open with X" default the phone remembers. iOS has no equivalent
+// mechanism for web pages, so it always falls back to the universal link below.
+const isAndroid = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
+
 const universalLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${ENCODED_MESSAGE}`
+
+function androidIntentLink(packageName) {
+  const fallback = encodeURIComponent(`https://play.google.com/store/apps/details?id=${packageName}`)
+  return `intent://send?phone=${WHATSAPP_NUMBER}&text=${ENCODED_MESSAGE}#Intent;scheme=whatsapp;package=${packageName};S.browser_fallback_url=${fallback};end`
+}
 
 export default function WhatsAppButton() {
   const [open, setOpen] = useState(false)
@@ -31,15 +42,34 @@ export default function WhatsAppButton() {
             </div>
           </div>
 
-          <a
-            href={universalLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="wa-popup-start"
-            onClick={() => setOpen(false)}
-          >
-            Start Chat
-          </a>
+          {isAndroid ? (
+            <div className="wa-popup-choices">
+              <a
+                href={androidIntentLink('com.whatsapp')}
+                className="wa-popup-start wa-popup-choice"
+                onClick={() => setOpen(false)}
+              >
+                Continue with WhatsApp
+              </a>
+              <a
+                href={androidIntentLink('com.whatsapp.w4b')}
+                className="wa-popup-start wa-popup-choice wa-popup-choice-alt"
+                onClick={() => setOpen(false)}
+              >
+                Continue with WhatsApp Business
+              </a>
+            </div>
+          ) : (
+            <a
+              href={universalLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="wa-popup-start"
+              onClick={() => setOpen(false)}
+            >
+              Start Chat
+            </a>
+          )}
         </div>
       )}
 
