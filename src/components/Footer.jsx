@@ -4,8 +4,10 @@ export default function Footer() {
       <div className="wrap">
         <div className="footer-grid">
           <div className="footer-brand footer-row">
-            <span className="brand">scentfused</span>
-            <p>Fused by Scent, Defined by You.</p>
+            <div className="footer-brand-text">
+              <span className="brand">scentfused</span>
+              <p>A curated house of perfumes, attars, bodycare and candles, for every skin and every story.</p>
+            </div>
             <form className="newsletter" onSubmit={(e) => e.preventDefault()}>
               <input type="email" placeholder="Your email" aria-label="Email address" />
               <button type="submit">Join</button>
