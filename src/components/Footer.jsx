@@ -32,7 +32,7 @@ export default function Footer() {
               <ul>
                 <li><a href="#">Instagram</a></li>
                 <li><a href="#">TikTok</a></li>
-                <li><a href="#">WhatsApp</a></li>
+                <li><a href="https://wa.me/923022726002" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
               </ul>
             </div>
 
