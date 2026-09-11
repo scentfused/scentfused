@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 export default function Footer() {
   return (
     <footer>
@@ -6,7 +8,7 @@ export default function Footer() {
           <div className="footer-brand footer-row">
             <div className="footer-brand-text">
               <span className="brand">scentfused</span>
-              <p>Fused by Scent, Defined by You.</p>
+              <p>A curated house of perfumes, attars, bodycare and candles, for every skin and every story.</p>
             </div>
             <form className="newsletter" onSubmit={(e) => e.preventDefault()}>
               <input type="email" placeholder="Your email" aria-label="Email address" />
@@ -18,10 +20,10 @@ export default function Footer() {
             <div className="footer-col footer-col-left">
               <h4>Shop</h4>
               <ul>
-                <li><a href="#perfumes">Perfumes</a></li>
-                <li><a href="#attars">Attars</a></li>
-                <li><a href="#soaps">Soaps &amp; Bodywash</a></li>
-                <li><a href="#candles">Candles</a></li>
+                <li><Link to="/perfumes">Perfumes</Link></li>
+                <li><Link to="/attars">Attars</Link></li>
+                <li><Link to="/soaps">Soaps &amp; Bodywash</Link></li>
+                <li><Link to="/candles">Candles</Link></li>
               </ul>
             </div>
 
@@ -37,10 +39,10 @@ export default function Footer() {
             <div className="footer-col footer-col-right">
               <h4>Help</h4>
               <ul>
-                <li><a href="#">Shipping</a></li>
-                <li><a href="#">Returns</a></li>
-                <li><a href="#">Track order</a></li>
-                <li><a href="#">Contact us</a></li>
+                <li><Link to="/help#shipping">Shipping</Link></li>
+                <li><Link to="/help#returns">Returns</Link></li>
+                <li><Link to="/help#track-order">Track order</Link></li>
+                <li><Link to="/help#contact-us">Contact us</Link></li>
               </ul>
             </div>
           </div>
