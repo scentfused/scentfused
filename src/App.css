@@ -703,6 +703,10 @@ footer{border-top:1px solid var(--hairline);padding:32px 0 20px;}
   text-decoration:none;
 }
 .wa-popup-start:hover{background:#1fb659;}
+.wa-popup-choices{display:flex;flex-direction:column;}
+.wa-popup-choice{border-radius:0;}
+.wa-popup-choice-alt{background:#128C7E;}
+.wa-popup-choice-alt:hover{background:#0e6e63;}
 
 @media (max-width:640px){
   .wa-widget{bottom:16px;right:16px;}
