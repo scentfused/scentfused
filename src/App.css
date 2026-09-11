@@ -489,6 +489,7 @@ footer{border-top:1px solid var(--hairline);padding:32px 0 20px;}
 /*here i have copied new code below this======*/
 .hero-preview{margin-top:10px;display:flex;align-items:center;gap:12px;}
 .hero-preview img{width:120px;height:70px;object-fit:cover;border:1px solid var(--hairline);}
+
 /* ---------- Product card hover overlay ---------- */
 .tile{position:relative;overflow:hidden;}
 .tile-hover{
@@ -658,19 +659,54 @@ footer{border-top:1px solid var(--hairline);padding:32px 0 20px;}
 .help-section p{color:var(--champagne);line-height:1.8;margin:0 0 12px;}
 .help-section a{color:var(--gold-bright);}
 
-/* ---------- Floating WhatsApp button ---------- */
+/* ---------- Floating WhatsApp widget ---------- */
+.wa-widget{position:fixed;bottom:24px;right:24px;z-index:150;display:flex;flex-direction:column;align-items:flex-end;gap:16px;}
 .whatsapp-float{
-  position:fixed;bottom:24px;right:24px;z-index:150;
-  width:56px;height:56px;border-radius:50%;
+  width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;
   background:#25D366;color:#fff;
   display:flex;align-items:center;justify-content:center;
   box-shadow:0 4px 14px rgba(0,0,0,0.4);
   transition:transform 0.2s ease;
 }
 .whatsapp-float:hover{transform:scale(1.08);}
+.wa-float-close{font-size:28px;line-height:1;}
+
+.wa-popup{
+  width:300px;max-width:calc(100vw - 48px);
+  background:#0a0a0a;border:1px solid var(--hairline);
+  box-shadow:0 8px 30px rgba(0,0,0,0.6);
+  overflow:hidden;
+}
+.wa-popup-head{
+  display:flex;align-items:center;gap:10px;padding:14px 16px;
+  background:#111;border-bottom:1px solid var(--hairline);position:relative;
+}
+.wa-popup-avatar{
+  width:38px;height:38px;border-radius:50%;background:#25D366;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.wa-popup-name{margin:0;font-size:14px;color:var(--gold-bright);font-weight:600;}
+.wa-popup-status{margin:2px 0 0;font-size:11.5px;color:var(--gold-dim);display:flex;align-items:center;gap:5px;}
+.wa-dot{width:7px;height:7px;border-radius:50%;background:#25D366;display:inline-block;}
+.wa-popup-close{
+  position:absolute;top:8px;right:10px;background:none;border:none;
+  color:var(--gold-dim);font-size:20px;cursor:pointer;line-height:1;
+}
+.wa-popup-body{padding:16px;}
+.wa-popup-bubble{
+  background:#1a1a1a;color:var(--champagne);font-size:13.5px;line-height:1.6;
+  padding:12px 14px;border-radius:2px 12px 12px 12px;
+}
+.wa-popup-start{
+  display:block;text-align:center;background:#25D366;color:#fff;
+  padding:12px;font-size:14px;font-weight:600;letter-spacing:0.3px;
+  text-decoration:none;
+}
+.wa-popup-start:hover{background:#1fb659;}
 
 @media (max-width:640px){
-  .whatsapp-float{bottom:16px;right:16px;width:50px;height:50px;}
+  .wa-widget{bottom:16px;right:16px;}
+  .whatsapp-float{width:50px;height:50px;}
 }
 /* ---------- Admin: collapsible accordion cards ---------- */
 .admin-accordion{display:flex;flex-direction:column;gap:16px;}
