@@ -19,7 +19,7 @@ export default function HelpPage() {
           <h2>Shipping</h2>
           <p>
             Orders are processed within 1–2 business days. Delivery across Pakistan typically
-            takes 3–5 business days depending on your city. We currently ship from Karachi and
+            takes 5–8 business days depending on your city. We currently ship from Karachi and
             deliver nationwide via courier.
           </p>
           <p>
@@ -32,7 +32,7 @@ export default function HelpPage() {
         <section id="returns" className="help-section">
           <h2>Returns &amp; Exchanges</h2>
           <p>
-            We accept returns or exchanges within 7 days of delivery, provided the product is
+            We accept returns or exchanges within 3 days of delivery, provided the product is
             unused, unopened, and in its original packaging — this helps us maintain quality and
             hygiene standards for fragrance products.
           </p>
