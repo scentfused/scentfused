@@ -57,7 +57,7 @@ export default function HelpPage() {
           <p>Have a question about a product, an order, or anything else? We're happy to help.</p>
           <p>
             <strong>Email:</strong> <a href="mailto:scentfused@gmail.com">scentfused@gmail.com</a><br />
-            <strong>WhatsApp:</strong> <a href="https://wa.me/923022726002">Message us</a><br />
+            <strong>WhatsApp:</strong> <a href="https://wa.me/923022726002" target="_blank" rel="noopener noreferrer">Message us</a><br />
             <strong>Location:</strong> Karachi, Pakistan
           </p>
         </section>
