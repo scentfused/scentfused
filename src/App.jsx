@@ -7,6 +7,7 @@ import HelpPage from './pages/HelpPage.jsx'
 import Admin from './pages/Admin.jsx'
 import AdminGate from './components/AdminGate.jsx'
 import CartDrawer from './components/CartDrawer.jsx'
+import WhatsAppButton from './components/WhatsAppButton.jsx'
 import QuickView from './components/QuickView.jsx'
 import { CATEGORIES } from './data/catalog.js'
 import { defaultSettings } from './data/settings.js'
@@ -152,6 +153,7 @@ export default function App() {
         />
      </Routes>
         <CartDrawer />
+        <WhatsAppButton />
         <QuickView />
     </div>
   )
