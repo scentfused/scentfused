@@ -642,6 +642,22 @@ footer{border-top:1px solid var(--hairline);padding:32px 0 20px;}
 .product-page-attribute-row dt{color:var(--gold-dim);font-size:13px;margin:0;}
 .product-page-attribute-row dd{margin:0;text-align:right;color:var(--champagne);font-size:13px;}
 
+/* ----------------------- Help page -------------------- */
+.help-page{padding:48px 32px;max-width:800px;margin:0 auto;}
+.help-title{font-size:32px;margin-bottom:24px;}
+.help-jump-nav{
+  display:flex;gap:20px;flex-wrap:wrap;border-bottom:1px solid var(--hairline);
+  padding-bottom:20px;margin-bottom:32px;
+}
+.help-jump-nav a{
+  font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--gold-dim);
+}
+.help-jump-nav a:hover{color:var(--gold-bright);}
+.help-section{margin-bottom:40px;scroll-margin-top:20px;}
+.help-section h2{font-size:22px;color:var(--gold-bright);margin-bottom:12px;}
+.help-section p{color:var(--champagne);line-height:1.8;margin:0 0 12px;}
+.help-section a{color:var(--gold-bright);}
+
 /* ---------- Admin: collapsible accordion cards ---------- */
 .admin-accordion{display:flex;flex-direction:column;gap:16px;}
 .admin-collapsible{
