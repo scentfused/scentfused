@@ -293,17 +293,17 @@ button{font-family:inherit;}
 @media (max-width:960px){.category-teaser-grid{grid-template-columns:repeat(2,1fr);}}
 @media (max-width:520px){.category-teaser-grid{grid-template-columns:1fr;}}
 .category-teaser{
-  display:flex;flex-direction:column;gap:14px;
-  border:1px solid var(--hairline);background:var(--panel);padding:30px 24px;
+  display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;
+  border:1px solid var(--hairline);background:#000000;padding:30px 24px;
   transition:border-color .25s ease, transform .25s ease;
 }
 .category-teaser:hover{border-color:var(--gold-dim);transform:translateY(-3px);}
 .category-teaser-icon{
   width:56px;height:56px;display:flex;align-items:center;justify-content:center;
-  background:radial-gradient(circle at 50% 40%, rgba(212,175,55,0.16), transparent 70%);
+  background:#000000;
 }
 .category-teaser-icon svg{width:70%;height:70%;}
-.category-teaser h3{font-size:20px;}
+.category-teaser h3{font-size:20px;font-weight:700;}
 .category-teaser p{font-size:13.5px;color:var(--champagne);margin:0;flex-grow:1;}
 .category-teaser-link{
   font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--gold-bright);
