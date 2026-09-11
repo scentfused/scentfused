@@ -342,9 +342,12 @@ footer{border-top:1px solid var(--hairline);padding:32px 0 20px;}
 .newsletter{display:flex;border:1px solid var(--hairline);margin-top:14px;}
 
 @media (max-width:640px){
-  .footer-links-row{grid-template-columns:1fr;text-align:center;}
-  .footer-col-left, .footer-col-center, .footer-col-right{text-align:center;}
-  .footer-col-left ul, .footer-col-center ul, .footer-col-right ul{justify-content:center;}
+.footer-links-row{grid-template-columns:1fr;text-align:center;}
+.footer-col-left, .footer-col-center, .footer-col-right{text-align:center;}
+.footer-col-left ul, .footer-col-center ul, .footer-col-right ul{justify-content:center;}
+.footer-brand{flex-direction:column;align-items:center;text-align:center;}
+.footer-brand-text{flex-direction:column;align-items:center;text-align:center;}
+.newsletter{margin-top:0;width:100%;}
 }
 .newsletter input:focus{outline:none;}
 .newsletter button{
