@@ -653,7 +653,7 @@ footer{border-top:1px solid var(--hairline);padding:32px 0 20px;}
   font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--gold-dim);
 }
 .help-jump-nav a:hover{color:var(--gold-bright);}
-.help-section{margin-bottom:40px;scroll-margin-top:20px;}
+.help-section{margin-bottom:40px;scroll-margin-top:100px;}
 .help-section h2{font-size:22px;color:var(--gold-bright);margin-bottom:12px;}
 .help-section p{color:var(--champagne);line-height:1.8;margin:0 0 12px;}
 .help-section a{color:var(--gold-bright);}
