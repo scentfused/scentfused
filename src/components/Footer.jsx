@@ -8,7 +8,7 @@ export default function Footer() {
           <div className="footer-brand footer-row">
             <div className="footer-brand-text">
               <span className="brand">scentfused</span>
-              <p>A curated house of perfumes, attars, bodycare and candles, for every skin and every story.</p>
+              <p>Fused by Scent, Defined by You.</p>
             </div>
             <form className="newsletter" onSubmit={(e) => e.preventDefault()}>
               <input type="email" placeholder="Your email" aria-label="Email address" />
