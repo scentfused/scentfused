@@ -1,8 +1,8 @@
 export const CATEGORIES = [
-  { key: 'perfumes', label: 'Perfumes', blurb: 'Alcohol-based eau de parfum, layered for depth and built to last through the day.' },
-  { key: 'attars', label: 'Non-alcoholic perfumes', blurb: 'Oil-based attars, gentle on skin and true to their scent from morning into night.' },
-  { key: 'soaps', label: 'Soaps & bodywash', blurb: 'Everyday washes finished with the same notes as the perfumes above.' },
-  { key: 'candles', label: 'Scented candles', blurb: 'Hand-poured candles that carry the collections signature accords into a room.' }
+  { key: 'perfumes', label: 'Perfumes', blurb: 'Worlds popular scents are fused to create your signature niche perfume.' },
+  { key: 'attars', label: 'Attars', blurb: '100% pure, alcohol-free oils expertly fused together to create intimate, multi-layered scent profiles.' },
+  { key: 'soaps', label: 'Soaps & bodywash', blurb: 'Your favorite perfume scent in our body wash and soaps to keep an unbroken aura around you 24/7.' },
+  { key: 'candles', label: 'Scented candles', blurb: 'Get your favorite scent in our luxury candles so its warm aura fills your space all day long.' }
 ]
 
 const raw = {
