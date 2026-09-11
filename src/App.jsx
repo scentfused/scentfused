@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import Home from './pages/Home.jsx'
 import CategoryPage from './pages/CategoryPage.jsx'
 import ProductPage from './pages/ProductPage.jsx'
+import HelpPage from './pages/HelpPage.jsx'
 import Admin from './pages/Admin.jsx'
 import AdminGate from './components/AdminGate.jsx'
 import CartDrawer from './components/CartDrawer.jsx'
@@ -128,6 +129,7 @@ export default function App() {
           />
         ))}       
         <Route path="/product/:id" element={<ProductPage products={products} />} />
+        <Route path="/help" element={<HelpPage />} />
         <Route
           path="/admin"
           element={
