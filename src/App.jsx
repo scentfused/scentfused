@@ -20,9 +20,16 @@ export default function App() {
   const [loadError, setLoadError] = useState('')
   const location = useLocation()
 
-  useEffect(() => {
+    useEffect(() => {
+    if (location.hash) {
+      const el = document.getElementById(location.hash.slice(1))
+      if (el) {
+        el.scrollIntoView({ behavior: 'auto' })
+        return
+      }
+    }
     window.scrollTo(0, 0)
-  }, [location.pathname])
+  }, [location.pathname, location.hash])
 
   // Load products + settings from Supabase once, on first mount.
   // This replaces the old hardcoded `initialProducts` starting state,
