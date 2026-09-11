@@ -11,31 +11,36 @@ export default function Footer() {
               <button type="submit">Join</button>
             </form>
           </div>
-          <div className="footer-row">
-            <h4>Shop</h4>
-            <ul>
-              <li><a href="#perfumes">Perfumes</a></li>
-              <li><a href="#attars">Attars</a></li>
-              <li><a href="#soaps">Soaps &amp; Bodywash</a></li>
-              <li><a href="#candles">Candles</a></li>
-            </ul>
-          </div>
-          <div className="footer-row">
-            <h4>Help</h4>
-            <ul>
-              <li><a href="#">Shipping</a></li>
-              <li><a href="#">Returns</a></li>
-              <li><a href="#">Track order</a></li>
-              <li><a href="#">Contact us</a></li>
-            </ul>
-          </div>
-          <div className="footer-row">
-            <h4>Follow</h4>
-            <ul>
-              <li><a href="#">Instagram</a></li>
-              <li><a href="#">TikTok</a></li>
-              <li><a href="#">WhatsApp</a></li>
-            </ul>
+
+          <div className="footer-links-row">
+            <div className="footer-col footer-col-left">
+              <h4>Shop</h4>
+              <ul>
+                <li><a href="#perfumes">Perfumes</a></li>
+                <li><a href="#attars">Attars</a></li>
+                <li><a href="#soaps">Soaps &amp; Bodywash</a></li>
+                <li><a href="#candles">Candles</a></li>
+              </ul>
+            </div>
+
+            <div className="footer-col footer-col-center">
+              <h4>Follow</h4>
+              <ul>
+                <li><a href="#">Instagram</a></li>
+                <li><a href="#">TikTok</a></li>
+                <li><a href="#">WhatsApp</a></li>
+              </ul>
+            </div>
+
+            <div className="footer-col footer-col-right">
+              <h4>Help</h4>
+              <ul>
+                <li><a href="#">Shipping</a></li>
+                <li><a href="#">Returns</a></li>
+                <li><a href="#">Track order</a></li>
+                <li><a href="#">Contact us</a></li>
+              </ul>
+            </div>
           </div>
         </div>
         <div className="footer-bottom">
