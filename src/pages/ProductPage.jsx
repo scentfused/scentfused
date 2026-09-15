@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext.jsx'
 import { CATEGORY_FIELDS } from '../data/categoryFields.js'
@@ -16,6 +16,18 @@ export default function ProductPage({ products }) {
   const [added, setAdded] = useState(false)
 
   const product = products.find((p) => String(p.id) === String(id))
+
+  const galleryImages = product
+    ? [product.image, ...(product.images || [])].filter(Boolean)
+    : []
+  const [selectedImage, setSelectedImage] = useState(galleryImages[0] || '')
+
+  // Reset the selected image whenever navigating to a different product —
+  // React Router keeps this same component mounted across /product/:id changes.
+  useEffect(() => {
+    setSelectedImage(galleryImages[0] || '')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id])
 
   if (!product) {
     return (
@@ -57,8 +69,25 @@ export default function ProductPage({ products }) {
       <Nav />
 
       <div className="product-page">
-        <div className="product-page-image">
-          {product.image ? <img src={product.image} alt={product.name} /> : <Icon category={product.category} />}
+        <div className="product-page-image-col">
+          <div className="product-page-image">
+            {selectedImage ? <img src={selectedImage} alt={product.name} /> : <Icon category={product.category} />}
+          </div>
+
+          {galleryImages.length > 1 && (
+            <div className="product-page-thumbs">
+              {galleryImages.map((img, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={`product-page-thumb ${selectedImage === img ? 'active' : ''}`}
+                  onClick={() => setSelectedImage(img)}
+                >
+                  <img src={img} alt={`${product.name} ${i + 1}`} />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="product-page-info">
