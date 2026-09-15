@@ -21,15 +21,19 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
 
   const NOTE_TAG_FIELDS = ['topNotes', 'heartNotes', 'baseNotes']
 
-  function addTag(fieldKey, rawValue) {
-    const value = rawValue.trim()
-    if (!value) return
+    function addTag(fieldKey, rawValue) {
+    // Split on commas so pasting or typing "Peony, Mandarin Orange, Citruses"
+    // and pressing Enter once still creates 3 separate tags, not 1 long one.
+    const pieces = rawValue.split(',').map((v) => v.trim()).filter(Boolean)
+    if (pieces.length === 0) return
+
     const current = Array.isArray(draft.attributes?.[fieldKey]) ? draft.attributes[fieldKey] : []
-    if (current.includes(value)) {
-      setTagInputs((prev) => ({ ...prev, [fieldKey]: '' }))
-      return
-    }
-    const nextAttributes = { ...draft.attributes, [fieldKey]: [...current, value] }
+    const merged = [...current]
+    pieces.forEach((piece) => {
+      if (!merged.includes(piece)) merged.push(piece)
+    })
+
+    const nextAttributes = { ...draft.attributes, [fieldKey]: merged }
     const nextNote = NOTE_TAG_FIELDS.includes(fieldKey) ? computeAutoNote(nextAttributes) : draft.note
     setDraft({ ...draft, attributes: nextAttributes, note: nextNote })
     setTagInputs((prev) => ({ ...prev, [fieldKey]: '' }))
