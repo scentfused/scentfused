@@ -3,7 +3,7 @@ import { useCart } from '../context/CartContext.jsx'
 import { CATEGORY_FIELDS } from '../data/categoryFields.js'
 import Icon from './Icon.jsx'
 
-const HOVER_ATTRIBUTE_KEYS = ['concentration', 'lasting', 'projection', 'occasion']
+const HOVER_ATTRIBUTE_KEYS = ['topNotes', 'heartNotes', 'baseNotes', 'concentration']
 
 export default function ProductCard({ product, badge }) {
   const { addToCart, setQuickViewProduct } = useCart()
@@ -21,14 +21,16 @@ export default function ProductCard({ product, badge }) {
     setQuickViewProduct(product)
   }
 
-  const fieldDefs = CATEGORY_FIELDS[product.category] || []
+    const fieldDefs = CATEGORY_FIELDS[product.category] || []
   const hoverLines = HOVER_ATTRIBUTE_KEYS
     .map((key) => {
       const value = product.attributes?.[key]
       const hasValue = Array.isArray(value) ? value.length > 0 : Boolean(value)
       if (!hasValue) return null
       const label = fieldDefs.find((f) => f.key === key)?.label || key
-      const display = Array.isArray(value) ? value.join(', ') : value
+      // Top/Heart/Base notes are tag arrays — show just the first one here to
+      // keep the hover card short; Concentration is a plain string as-is.
+      const display = Array.isArray(value) ? value[0] : value
       return { label, display }
     })
     .filter(Boolean)
