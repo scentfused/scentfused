@@ -822,6 +822,20 @@ footer{border-top:1px solid var(--hairline);padding:32px 0 20px;}
 .admin-review-from{color:#e8987c;text-decoration:line-through;}
 .admin-review-arrow{color:var(--gold-dim);}
 .admin-review-to{color:var(--champagne);}
+/* ---------- Admin: additional product images (gallery) ---------- */
+.gallery-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.gallery-row input[type="url"]{flex:1;}
+.gallery-row-thumb{width:36px;height:36px;flex-shrink:0;border:1px solid var(--hairline);}
+.gallery-row-thumb img{width:100%;height:100%;object-fit:cover;}
+.gallery-row-upload{
+  position:relative;overflow:hidden;flex-shrink:0;
+  border:1px solid var(--hairline);color:var(--champagne);
+  padding:9px 14px;font-size:12.5px;cursor:pointer;text-align:center;white-space:nowrap;
+}
+.gallery-row-upload:hover{border-color:var(--gold-dim);}
+.gallery-row-upload input[type="file"]{
+  position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;
+}
 
 /* ---------- Sale price display ---------- */
 .price-stack{display:flex;flex-direction:column;gap:2px;}
