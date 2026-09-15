@@ -453,8 +453,9 @@ footer{border-top:1px solid var(--hairline);padding:32px 0 20px;}
   text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--gold-dim);
   padding:10px 12px;border-bottom:1px solid var(--hairline);font-weight:400;
 }
-.admin-table td{padding:14px 12px;border-bottom:1px solid var(--hairline);vertical-align:middle;}
-.admin-table td.muted{color:var(--gold-dim);}
+.admin-table td{padding:14px 12px;border-bottom:1px solid var(--hairline);vertical-align:middle;height:70px;box-sizing:border-box;}
+.admin-table td.muted{color:var(--gold-dim);max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.admin-table td:nth-child(2){max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .admin-thumb{
   width:42px;height:42px;border:1px solid var(--hairline);display:flex;align-items:center;justify-content:center;
   overflow:hidden;
