@@ -586,6 +586,26 @@ footer{border-top:1px solid var(--hairline);padding:32px 0 20px;}
   .quickview-modal{flex-direction:column;}
   .quickview-image{width:100%;}
 }
+/* ---------- Admin: tag input (Top/Heart/Base notes) ---------- */
+.tag-input-box{
+  border:1px solid var(--hairline);background:#000;padding:8px;min-height:44px;
+}
+.tag-chip-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;}
+.tag-chip-list:empty{margin-bottom:0;}
+.tag-chip{
+  display:inline-flex;align-items:center;gap:6px;background:#1a1a1a;
+  border:1px solid var(--gold-dim);color:var(--champagne);font-size:12.5px;
+  padding:4px 6px 4px 10px;
+}
+.tag-chip button{
+  background:none;border:none;color:var(--gold-dim);cursor:pointer;
+  font-size:15px;line-height:1;padding:0;
+}
+.tag-chip button:hover{color:var(--gold-bright);}
+.tag-input-box input{
+  border:none;background:none;width:100%;padding:4px 2px;color:var(--champagne);font-size:14px;
+}
+.tag-input-box input:focus{outline:none;}
 
 
 /* ---------- Product card as a link ---------- */
