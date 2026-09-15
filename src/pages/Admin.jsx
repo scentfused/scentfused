@@ -31,9 +31,8 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
   const [editingId, setEditingId] = useState(null)
   const [imageError, setImageError] = useState('')
   const [uploading, setUploading] = useState(false)
-  const [galleryUploading, setGalleryUploading] = useState(false)
+  const [galleryUploadingIndex, setGalleryUploadingIndex] = useState(null)
   const [galleryError, setGalleryError] = useState('')
-  const [galleryUrlInput, setGalleryUrlInput] = useState('')
   const [heroUploading, setHeroUploading] = useState(false)
   const [heroImageError, setHeroImageError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -188,7 +187,7 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
       sale_price: draft.salePrice ? Number(draft.salePrice) : null,
       sku: draft.sku || null,
       image: draft.image || null,
-      images: draft.images || [],
+      images: (draft.images || []).filter((url) => url.trim()),
       variants: cleanVariants,
       description: draft.description || null,
       features: cleanFeatures,
@@ -353,14 +352,19 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
     }
   }
 
-  function addGalleryImageUrl() {
-    const url = galleryUrlInput.trim()
-    if (!url) return
-    setDraft((d) => ({ ...d, images: [...(d.images || []), url] }))
-    setGalleryUrlInput('')
+  function addGalleryImageRow() {
+    setDraft((d) => ({ ...d, images: [...(d.images || []), ''] }))
   }
 
-  async function handleGalleryImageFile(e) {
+  function updateGalleryImageUrl(index, value) {
+    setDraft((d) => {
+      const next = [...(d.images || [])]
+      next[index] = value
+      return { ...d, images: next }
+    })
+  }
+
+  async function handleGalleryImageFile(index, e) {
     const file = e.target.files?.[0]
     if (!file) return
     setGalleryError('')
@@ -374,15 +378,15 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
       return
     }
 
-    setGalleryUploading(true)
+    setGalleryUploadingIndex(index)
     try {
       const url = await uploadImageToCloudinary(file)
-      setDraft((d) => ({ ...d, images: [...(d.images || []), url] }))
+      updateGalleryImageUrl(index, url)
     } catch (err) {
       console.error('Gallery image upload failed:', err)
       setGalleryError('Upload failed — please try again, or paste a URL instead.')
     } finally {
-      setGalleryUploading(false)
+      setGalleryUploadingIndex(null)
     }
     e.target.value = ''
   }
@@ -672,36 +676,44 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
                   <div className="admin-form-wide">
                     <span className="variants-label">Additional images (optional gallery for the product page)</span>
 
-                    <div className="gallery-add-row">
-                      <input
-                        type="url"
-                        value={galleryUrlInput}
-                        onChange={(e) => setGalleryUrlInput(e.target.value)}
-                        placeholder="https://example.com/photo2.jpg"
-                      />
-                      <button type="button" className="btn btn-line" onClick={addGalleryImageUrl} disabled={!galleryUrlInput.trim()}>
-                        + Add URL
-                      </button>
-                    </div>
+                    {(draft.images || []).map((url, i) => (
+                      <div className="gallery-row" key={i}>
+                        {url && (
+                          <div className="gallery-row-thumb">
+                            <img src={url} alt={`Gallery ${i + 1}`} />
+                          </div>
+                        )}
+                        <input
+                          type="url"
+                          placeholder="https://example.com/photo.jpg"
+                          value={url}
+                          onChange={(e) => updateGalleryImageUrl(i, e.target.value)}
+                        />
+                        <label className="gallery-row-upload">
+                          Upload
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleGalleryImageFile(i, e)}
+                            disabled={galleryUploadingIndex === i}
+                          />
+                        </label>
+                        <button
+                          type="button"
+                          className="variant-remove"
+                          onClick={() => removeGalleryImage(i)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
 
-                    <label className="gallery-upload-label">
-                      Or upload an image
-                      <input type="file" accept="image/*" onChange={handleGalleryImageFile} disabled={galleryUploading} />
-                    </label>
-
-                    {galleryUploading && <p className="muted">Uploading image…</p>}
+                    {galleryUploadingIndex !== null && <p className="muted">Uploading image…</p>}
                     {galleryError && <p className="admin-form-error">{galleryError}</p>}
 
-                    {(draft.images || []).length > 0 && (
-                      <div className="gallery-thumb-list">
-                        {(draft.images || []).map((url, i) => (
-                          <div className="gallery-thumb" key={i}>
-                            <img src={url} alt={`Gallery ${i + 1}`} />
-                            <button type="button" onClick={() => removeGalleryImage(i)} aria-label="Remove image">&times;</button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <button type="button" className="btn btn-line" onClick={addGalleryImageRow}>
+                      + Add another image
+                    </button>
                   </div>
 
                   <div className="admin-form-actions">
