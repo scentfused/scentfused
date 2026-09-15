@@ -614,6 +614,10 @@ footer{border-top:1px solid var(--hairline);padding:32px 0 20px;}
 }
 .tag-input-box input:focus{outline:none;}
 
+/* ---------- Admin: inline edit form under a table row ---------- */
+.admin-inline-edit-cell{
+  background:#0a0a0a;padding:24px !important;border-bottom:2px solid var(--gold-dim) !important;
+}
 
 /* ---------- Product card as a link ---------- */
 .card-link{color:inherit;text-decoration:none;display:block;}
