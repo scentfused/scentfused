@@ -10,6 +10,24 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5MB, Cloudinary handles storage/optim
 
 export default function Admin({ products, setProducts, settings, setSettings }) {
   const [draft, setDraft] = useState(emptyDraft())
+  const [tagInputs, setTagInputs] = useState({})
+
+  function addTag(fieldKey, rawValue) {
+    const value = rawValue.trim()
+    if (!value) return
+    const current = Array.isArray(draft.attributes?.[fieldKey]) ? draft.attributes[fieldKey] : []
+    if (current.includes(value)) {
+      setTagInputs((prev) => ({ ...prev, [fieldKey]: '' }))
+      return
+    }
+    setDraft({ ...draft, attributes: { ...draft.attributes, [fieldKey]: [...current, value] } })
+    setTagInputs((prev) => ({ ...prev, [fieldKey]: '' }))
+  }
+
+  function removeTag(fieldKey, index) {
+    const current = Array.isArray(draft.attributes?.[fieldKey]) ? draft.attributes[fieldKey] : []
+    setDraft({ ...draft, attributes: { ...draft.attributes, [fieldKey]: current.filter((_, i) => i !== index) } })
+  }
   const [editingId, setEditingId] = useState(null)
   const [imageError, setImageError] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -226,6 +244,22 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
     setOriginalProduct(product)
     setPendingUpdate(null)
     setImageError('')
+    setTagInputs({})
+
+    // Older products may have topNotes/heartNotes/baseNotes saved as a plain
+    // comma-separated string (from before tags existed) — convert those into
+    // an array here so the tag-chip UI displays them correctly either way.
+    const rawAttributes = product.attributes || {}
+    const normalizedAttributes = {}
+    Object.keys(rawAttributes).forEach((key) => {
+      const value = rawAttributes[key]
+      if (typeof value === 'string' && ['topNotes', 'heartNotes', 'baseNotes'].includes(key)) {
+        normalizedAttributes[key] = value.split(',').map((v) => v.trim()).filter(Boolean)
+      } else {
+        normalizedAttributes[key] = value
+      }
+    })
+
     setDraft({
       name: product.name,
       category: product.category,
@@ -235,7 +269,7 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
       description: product.description || '',
       features: (product.features || []).join('\n'),
       usage: product.usage || '',
-      attributes: product.attributes || {},
+      attributes: normalizedAttributes,
       sku: product.sku || '',
       salePrice: product.sale_price ? String(product.sale_price) : ''
     })
@@ -501,7 +535,7 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
                   {(CATEGORY_FIELDS[draft.category] || [])
                     .filter((field) => field.key !== 'season' && field.key !== 'occasion')
                     .map((field) => (
-                      <label key={field.key}>
+                      <label key={field.key} className={field.type === 'tags' ? 'admin-form-wide' : ''}>
                         {field.label}
 
                         {field.type === 'text' && (
@@ -526,6 +560,35 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
                               <option key={opt} value={opt}>{opt}</option>
                             ))}
                           </select>
+                        )}
+
+                        {field.type === 'tags' && (
+                          <div className="tag-input-box">
+                            <div className="tag-chip-list">
+                              {(Array.isArray(draft.attributes?.[field.key]) ? draft.attributes[field.key] : []).map((tag, i) => (
+                                <span className="tag-chip" key={`${tag}-${i}`}>
+                                  {tag}
+                                  <button type="button" onClick={() => removeTag(field.key, i)} aria-label={`Remove ${tag}`}>&times;</button>
+                                </span>
+                              ))}
+                            </div>
+                            <input
+                              type="text"
+                              value={tagInputs[field.key] || ''}
+                              onChange={(e) => setTagInputs((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ',') {
+                                  e.preventDefault()
+                                  addTag(field.key, tagInputs[field.key] || '')
+                                } else if (e.key === 'Backspace' && !tagInputs[field.key]) {
+                                  const current = Array.isArray(draft.attributes?.[field.key]) ? draft.attributes[field.key] : []
+                                  if (current.length > 0) removeTag(field.key, current.length - 1)
+                                }
+                              }}
+                              onBlur={() => addTag(field.key, tagInputs[field.key] || '')}
+                              placeholder="Type a note, press Enter"
+                            />
+                          </div>
                         )}
                       </label>
                     ))}
