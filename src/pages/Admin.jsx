@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CATEGORIES, emptyDraft } from '../data/catalog.js'
 import { FONT_OPTIONS } from '../data/settings.js'
@@ -12,38 +12,21 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
   const [draft, setDraft] = useState(emptyDraft())
   const [tagInputs, setTagInputs] = useState({})
 
-    function computeAutoNote(attributes) {
-    const firstTop = Array.isArray(attributes.topNotes) ? attributes.topNotes[0] : null
-    const firstHeart = Array.isArray(attributes.heartNotes) ? attributes.heartNotes[0] : null
-    const firstBase = Array.isArray(attributes.baseNotes) ? attributes.baseNotes[0] : null
-    return [firstTop, firstHeart, firstBase].filter(Boolean).join(', ')
-  }
-
-  const NOTE_TAG_FIELDS = ['topNotes', 'heartNotes', 'baseNotes']
-
-    function addTag(fieldKey, rawValue) {
-    // Split on commas so pasting or typing "Peony, Mandarin Orange, Citruses"
-    // and pressing Enter once still creates 3 separate tags, not 1 long one.
-    const pieces = rawValue.split(',').map((v) => v.trim()).filter(Boolean)
-    if (pieces.length === 0) return
-
+  function addTag(fieldKey, rawValue) {
+    const value = rawValue.trim()
+    if (!value) return
     const current = Array.isArray(draft.attributes?.[fieldKey]) ? draft.attributes[fieldKey] : []
-    const merged = [...current]
-    pieces.forEach((piece) => {
-      if (!merged.includes(piece)) merged.push(piece)
-    })
-
-    const nextAttributes = { ...draft.attributes, [fieldKey]: merged }
-    const nextNote = NOTE_TAG_FIELDS.includes(fieldKey) ? computeAutoNote(nextAttributes) : draft.note
-    setDraft({ ...draft, attributes: nextAttributes, note: nextNote })
+    if (current.includes(value)) {
+      setTagInputs((prev) => ({ ...prev, [fieldKey]: '' }))
+      return
+    }
+    setDraft({ ...draft, attributes: { ...draft.attributes, [fieldKey]: [...current, value] } })
     setTagInputs((prev) => ({ ...prev, [fieldKey]: '' }))
   }
 
   function removeTag(fieldKey, index) {
     const current = Array.isArray(draft.attributes?.[fieldKey]) ? draft.attributes[fieldKey] : []
-    const nextAttributes = { ...draft.attributes, [fieldKey]: current.filter((_, i) => i !== index) }
-    const nextNote = NOTE_TAG_FIELDS.includes(fieldKey) ? computeAutoNote(nextAttributes) : draft.note
-    setDraft({ ...draft, attributes: nextAttributes, note: nextNote })
+    setDraft({ ...draft, attributes: { ...draft.attributes, [fieldKey]: current.filter((_, i) => i !== index) } })
   }
   const [editingId, setEditingId] = useState(null)
   const [imageError, setImageError] = useState('')
@@ -290,7 +273,10 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
       sku: product.sku || '',
       salePrice: product.sale_price ? String(product.sale_price) : ''
     })
-    setOpenSections((prev) => ({ ...prev, product: true }))
+    setOpenSections((prev) => ({ ...prev, table: true }))
+    setTimeout(() => {
+      document.getElementById(`edit-row-${product.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 50)
   }
 
   async function handleDelete(id) {
@@ -358,174 +344,18 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
     }
   }
 
-  return (
-    <div className="admin">
-      <header className="admin-topbar">
-        <span className="brand">scentfused <em>admin</em></span>
-        <Link className="admin-btn" to="/">View site</Link>
-      </header>
-
-      <div className="wrap admin-wrap">
-        <section className="admin-stats">
-          <div className="stat-card">
-            <span className="stat-label">Total products</span>
-            <span className="stat-value">{stats.total}</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-label">Catalog value</span>
-            <span className="stat-value">Rs. {stats.value.toLocaleString()}</span>
-          </div>
-          {stats.byCategory.map((c) => (
-            <div className="stat-card" key={c.key}>
-              <span className="stat-label">{c.label}</span>
-              <span className="stat-value">{c.count}</span>
-            </div>
-          ))}
-        </section>
-
-        <div className="admin-accordion">
-          {/* ---------- Site settings ---------- */}
-          <section className={`admin-collapsible ${openSections.settings ? 'open' : ''}`}>
-            <button type="button" className="admin-collapsible-head" onClick={() => toggleSection('settings')}>
-              <span>Site settings</span>
-              <span className="admin-collapsible-arrow">▾</span>
-            </button>
-
-            {openSections.settings && (
-              <div className="admin-collapsible-body">
-                <div className="settings-grid">
-                  <div className="settings-group">
-                    <h3 className="settings-group-title">Branding</h3>
-
-                    <label className="settings-row">
-                      Brand font
-                      <select
-                        value={settings.brandFont}
-                        onChange={(e) => setSettings({ ...settings, brandFont: e.target.value })}
-                      >
-                        {FONT_OPTIONS.map((font) => (
-                          <option key={font} value={font}>{font}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <span className="brand-preview" style={{ fontFamily: `'${settings.brandFont}', sans-serif` }}>
-                      SCENTFUSED
-                    </span>
-
-                    <label className="settings-row">
-                      Accent color
-                      <input
-                        type="color"
-                        value={settings.accentColor}
-                        onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
-                      />
-                    </label>
-                  </div>
-
-                  <div className="settings-group">
-                    <h3 className="settings-group-title">Homepage</h3>
-
-                    <label className="admin-form-wide">
-                      Hero background photo
-                      <input type="file" accept="image/*" onChange={handleHeroImageFile} disabled={heroUploading} />
-                    </label>
-                    {heroUploading && <p className="admin-form-wide muted">Uploading image…</p>}
-                    {heroImageError && <p className="admin-form-error admin-form-wide">{heroImageError}</p>}
-
-                    <label className="settings-row">
-                      Or paste an image URL
-                      <input
-                        type="text"
-                        value={settings.heroImage || ''}
-                        onChange={(e) => setSettings({ ...settings, heroImage: e.target.value })}
-                        placeholder="https://..."
-                      />
-                    </label>
-
-                    {settings.heroImage && (
-                      <div className="hero-preview">
-                        <img src={settings.heroImage} alt="Hero background preview" />
-                        <button type="button" className="btn btn-line" onClick={() => setSettings({ ...settings, heroImage: '' })}>
-                          Remove
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="settings-group">
-                    <h3 className="settings-group-title">Carousel — "Latest arrivals"</h3>
-                    <p className="muted settings-hint">Choose which products appear in the homepage carousel.</p>
-
-                    <div className="carousel-picker">
-                      <select
-                        value={carouselCategory}
-                        onChange={(e) => { setCarouselCategory(e.target.value); setCarouselPick('') }}
-                      >
-                        {CATEGORIES.map((c) => (
-                          <option key={c.key} value={c.key}>{c.label}</option>
-                        ))}
-                      </select>
-
-                      <select value={carouselPick} onChange={(e) => setCarouselPick(e.target.value)}>
-                        <option value="">Select a product…</option>
-                        {carouselCategoryProducts.map((p) => (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                      </select>
-
-                      <button type="button" className="btn btn-line" onClick={addToCarousel} disabled={!carouselPick}>
-                        + Add
-                      </button>
-                    </div>
-
-                    {carouselSelectedProducts.length > 0 && (
-                      <ul className="carousel-picked-list">
-                        {carouselSelectedProducts.map((p) => (
-                          <li key={p.id}>
-                            <span>{p.name}</span>
-                            <button type="button" onClick={() => removeFromCarousel(p.id)}>Remove</button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-
-                  <div className="settings-group">
-                    <h3 className="settings-group-title">Display</h3>
-
-                    <label className="settings-toggle">
-                      <input
-                        type="checkbox"
-                        checked={settings.showNewBadge}
-                        onChange={(e) => setSettings({ ...settings, showNewBadge: e.target.checked })}
-                      />
-                      Show "New" badge on latest arrivals
-                    </label>
-
-                    <label className="settings-toggle">
-                      <input
-                        type="checkbox"
-                        checked={settings.carouselAutoplay}
-                        onChange={(e) => setSettings({ ...settings, carouselAutoplay: e.target.checked })}
-                      />
-                      Auto-scroll the latest arrivals carousel
-                    </label>
-                  </div>
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* ---------- Add / edit product ---------- */}
-          <section className={`admin-collapsible ${openSections.product ? 'open' : ''}`}>
-            <button type="button" className="admin-collapsible-head" onClick={() => toggleSection('product')}>
-              <span>{editingId ? 'Edit product' : 'Add a product'}</span>
-              <span className="admin-collapsible-arrow">▾</span>
-            </button>
-
-            {openSections.product && (
-              <div className="admin-collapsible-body">
-                <form onSubmit={handleSubmit} className="admin-form">
+  function renderProductForm() {
+    return (
+      <>
+                  <form
+                    onSubmit={handleSubmit}
+                    className="admin-form"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                        e.preventDefault()
+                      }
+                    }}
+                  >
                   <label>
                     Category
                     <select
@@ -831,6 +661,185 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
                     </div>
                   </div>
                 )}
+      </>
+    )
+  }
+
+  return (
+    <div className="admin">
+      <header className="admin-topbar">
+        <span className="brand">scentfused <em>admin</em></span>
+        <Link className="admin-btn" to="/">View site</Link>
+      </header>
+
+      <div className="wrap admin-wrap">
+        <section className="admin-stats">
+          <div className="stat-card">
+            <span className="stat-label">Total products</span>
+            <span className="stat-value">{stats.total}</span>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">Catalog value</span>
+            <span className="stat-value">Rs. {stats.value.toLocaleString()}</span>
+          </div>
+          {stats.byCategory.map((c) => (
+            <div className="stat-card" key={c.key}>
+              <span className="stat-label">{c.label}</span>
+              <span className="stat-value">{c.count}</span>
+            </div>
+          ))}
+        </section>
+
+        <div className="admin-accordion">
+          {/* ---------- Site settings ---------- */}
+          <section className={`admin-collapsible ${openSections.settings ? 'open' : ''}`}>
+            <button type="button" className="admin-collapsible-head" onClick={() => toggleSection('settings')}>
+              <span>Site settings</span>
+              <span className="admin-collapsible-arrow">▾</span>
+            </button>
+
+            {openSections.settings && (
+              <div className="admin-collapsible-body">
+                <div className="settings-grid">
+                  <div className="settings-group">
+                    <h3 className="settings-group-title">Branding</h3>
+
+                    <label className="settings-row">
+                      Brand font
+                      <select
+                        value={settings.brandFont}
+                        onChange={(e) => setSettings({ ...settings, brandFont: e.target.value })}
+                      >
+                        {FONT_OPTIONS.map((font) => (
+                          <option key={font} value={font}>{font}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <span className="brand-preview" style={{ fontFamily: `'${settings.brandFont}', sans-serif` }}>
+                      SCENTFUSED
+                    </span>
+
+                    <label className="settings-row">
+                      Accent color
+                      <input
+                        type="color"
+                        value={settings.accentColor}
+                        onChange={(e) => setSettings({ ...settings, accentColor: e.target.value })}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="settings-group">
+                    <h3 className="settings-group-title">Homepage</h3>
+
+                    <label className="admin-form-wide">
+                      Hero background photo
+                      <input type="file" accept="image/*" onChange={handleHeroImageFile} disabled={heroUploading} />
+                    </label>
+                    {heroUploading && <p className="admin-form-wide muted">Uploading image…</p>}
+                    {heroImageError && <p className="admin-form-error admin-form-wide">{heroImageError}</p>}
+
+                    <label className="settings-row">
+                      Or paste an image URL
+                      <input
+                        type="text"
+                        value={settings.heroImage || ''}
+                        onChange={(e) => setSettings({ ...settings, heroImage: e.target.value })}
+                        placeholder="https://..."
+                      />
+                    </label>
+
+                    {settings.heroImage && (
+                      <div className="hero-preview">
+                        <img src={settings.heroImage} alt="Hero background preview" />
+                        <button type="button" className="btn btn-line" onClick={() => setSettings({ ...settings, heroImage: '' })}>
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="settings-group">
+                    <h3 className="settings-group-title">Carousel — "Latest arrivals"</h3>
+                    <p className="muted settings-hint">Choose which products appear in the homepage carousel.</p>
+
+                    <div className="carousel-picker">
+                      <select
+                        value={carouselCategory}
+                        onChange={(e) => { setCarouselCategory(e.target.value); setCarouselPick('') }}
+                      >
+                        {CATEGORIES.map((c) => (
+                          <option key={c.key} value={c.key}>{c.label}</option>
+                        ))}
+                      </select>
+
+                      <select value={carouselPick} onChange={(e) => setCarouselPick(e.target.value)}>
+                        <option value="">Select a product…</option>
+                        {carouselCategoryProducts.map((p) => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </select>
+
+                      <button type="button" className="btn btn-line" onClick={addToCarousel} disabled={!carouselPick}>
+                        + Add
+                      </button>
+                    </div>
+
+                    {carouselSelectedProducts.length > 0 && (
+                      <ul className="carousel-picked-list">
+                        {carouselSelectedProducts.map((p) => (
+                          <li key={p.id}>
+                            <span>{p.name}</span>
+                            <button type="button" onClick={() => removeFromCarousel(p.id)}>Remove</button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="settings-group">
+                    <h3 className="settings-group-title">Display</h3>
+
+                    <label className="settings-toggle">
+                      <input
+                        type="checkbox"
+                        checked={settings.showNewBadge}
+                        onChange={(e) => setSettings({ ...settings, showNewBadge: e.target.checked })}
+                      />
+                      Show "New" badge on latest arrivals
+                    </label>
+
+                    <label className="settings-toggle">
+                      <input
+                        type="checkbox"
+                        checked={settings.carouselAutoplay}
+                        onChange={(e) => setSettings({ ...settings, carouselAutoplay: e.target.checked })}
+                      />
+                      Auto-scroll the latest arrivals carousel
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* ---------- Add product ---------- */}
+          <section className={`admin-collapsible ${openSections.product ? 'open' : ''}`}>
+            <button type="button" className="admin-collapsible-head" onClick={() => toggleSection('product')}>
+              <span>Add a product</span>
+              <span className="admin-collapsible-arrow">▾</span>
+            </button>
+
+            {openSections.product && (
+              <div className="admin-collapsible-body">
+                {editingId ? (
+                  <p className="muted">
+                    You're currently editing "{originalProduct?.name}" — scroll down to the Products
+                    table below, where the edit form now appears directly under that product.
+                  </p>
+                ) : (
+                  renderProductForm()
+                )}
               </div>
             )}
           </section>
@@ -878,23 +887,34 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
                   </thead>
                   <tbody>
                     {visible.map((p) => (
-                      <tr key={p.id}>
-                        <td>
-                          <div className="admin-thumb">
-                            {p.image
-                              ? <img src={p.image} alt={p.name} />
-                              : <span className="admin-thumb-empty">—</span>}
-                          </div>
-                        </td>
-                        <td>{p.name}</td>
-                        <td>{CATEGORIES.find((c) => c.key === p.category)?.label}</td>
-                        <td className="muted">{p.note}</td>
-                        <td>Rs. {Number(p.price).toLocaleString()}</td>
-                        <td className="admin-row-actions">
-                          <button onClick={() => handleEdit(p)}>Edit</button>
-                          <button onClick={() => handleDelete(p.id)}>Delete</button>
-                        </td>
-                      </tr>
+                      <Fragment key={p.id}>
+                        <tr>
+                          <td>
+                            <div className="admin-thumb">
+                              {p.image
+                                ? <img src={p.image} alt={p.name} />
+                                : <span className="admin-thumb-empty">—</span>}
+                            </div>
+                          </td>
+                          <td>{p.name}</td>
+                          <td>{CATEGORIES.find((c) => c.key === p.category)?.label}</td>
+                          <td className="muted">{p.note}</td>
+                          <td>Rs. {Number(p.price).toLocaleString()}</td>
+                          <td className="admin-row-actions">
+                            <button onClick={() => (editingId === p.id ? resetForm() : handleEdit(p))}>
+                              {editingId === p.id ? 'Close' : 'Edit'}
+                            </button>
+                            <button onClick={() => handleDelete(p.id)}>Delete</button>
+                          </td>
+                        </tr>
+                        {editingId === p.id && (
+                          <tr id={`edit-row-${p.id}`}>
+                            <td colSpan="6" className="admin-inline-edit-cell">
+                              {renderProductForm()}
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
                     ))}
                     {visible.length === 0 && (
                       <tr>
