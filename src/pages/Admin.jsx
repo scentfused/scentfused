@@ -12,6 +12,15 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
   const [draft, setDraft] = useState(emptyDraft())
   const [tagInputs, setTagInputs] = useState({})
 
+    function computeAutoNote(attributes) {
+    const firstTop = Array.isArray(attributes.topNotes) ? attributes.topNotes[0] : null
+    const firstHeart = Array.isArray(attributes.heartNotes) ? attributes.heartNotes[0] : null
+    const firstBase = Array.isArray(attributes.baseNotes) ? attributes.baseNotes[0] : null
+    return [firstTop, firstHeart, firstBase].filter(Boolean).join(', ')
+  }
+
+  const NOTE_TAG_FIELDS = ['topNotes', 'heartNotes', 'baseNotes']
+
   function addTag(fieldKey, rawValue) {
     const value = rawValue.trim()
     if (!value) return
@@ -20,13 +29,17 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
       setTagInputs((prev) => ({ ...prev, [fieldKey]: '' }))
       return
     }
-    setDraft({ ...draft, attributes: { ...draft.attributes, [fieldKey]: [...current, value] } })
+    const nextAttributes = { ...draft.attributes, [fieldKey]: [...current, value] }
+    const nextNote = NOTE_TAG_FIELDS.includes(fieldKey) ? computeAutoNote(nextAttributes) : draft.note
+    setDraft({ ...draft, attributes: nextAttributes, note: nextNote })
     setTagInputs((prev) => ({ ...prev, [fieldKey]: '' }))
   }
 
   function removeTag(fieldKey, index) {
     const current = Array.isArray(draft.attributes?.[fieldKey]) ? draft.attributes[fieldKey] : []
-    setDraft({ ...draft, attributes: { ...draft.attributes, [fieldKey]: current.filter((_, i) => i !== index) } })
+    const nextAttributes = { ...draft.attributes, [fieldKey]: current.filter((_, i) => i !== index) }
+    const nextNote = NOTE_TAG_FIELDS.includes(fieldKey) ? computeAutoNote(nextAttributes) : draft.note
+    setDraft({ ...draft, attributes: nextAttributes, note: nextNote })
   }
   const [editingId, setEditingId] = useState(null)
   const [imageError, setImageError] = useState('')
