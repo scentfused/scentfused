@@ -42,6 +42,29 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
   // Which top-level cards are expanded. Each toggles independently.
   const [openSections, setOpenSections] = useState({ settings: false, product: false, table: false, ai: false })
     const [aiPrompt, setAiPrompt] = useState('')
+  const [aiSelectedProductId, setAiSelectedProductId] = useState('')
+
+  function buildPromptFromProduct(product) {
+    const fieldDefs = CATEGORY_FIELDS[product.category] || []
+    const notesParts = []
+    ;['topNotes', 'heartNotes', 'baseNotes'].forEach((key) => {
+      const value = product.attributes?.[key]
+      if (Array.isArray(value) && value.length > 0) notesParts.push(value[0])
+    })
+    const noteText = notesParts.length > 0 ? notesParts.join(', ') : (product.note || '')
+    const categoryLabel = CATEGORIES.find((c) => c.key === product.category)?.label || product.category
+
+    return `A luxury product photograph of "${product.name}", a ${categoryLabel.toLowerCase()} with notes of ${noteText || 'fine fragrance'}. Elegant glass bottle, dramatic studio lighting, black background, gold accents, high-end e-commerce photography style.`
+  }
+
+  function handleSelectAIProduct(productId) {
+    setAiSelectedProductId(productId)
+    if (!productId) return
+    const product = products.find((p) => String(p.id) === String(productId))
+    if (product) {
+      setAiPrompt(buildPromptFromProduct(product))
+    }
+  }
   const [aiGenerating, setAiGenerating] = useState(false)
   const [aiImage, setAiImage] = useState('')
   const [aiError, setAiError] = useState('')
@@ -632,14 +655,24 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
                   </div>
 
                   <label className="admin-form-wide">
-                    Description (shown on the product's own page)
-                    <textarea
-                      rows="4"
-                      value={draft.description || ''}
-                      onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-                      placeholder="A longer description of the product — story, inspiration, what makes it special..."
-                    />
-                  </label>
+                  Base this on an existing product (optional)
+                  <select value={aiSelectedProductId} onChange={(e) => handleSelectAIProduct(e.target.value)}>
+                    <option value="">Choose a product…</option>
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="admin-form-wide">
+                  Describe the image you want
+                  <textarea
+                    rows="3"
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder="e.g. A luxury amber perfume bottle on black marble, dramatic lighting, product photography"
+                  />
+                </label>
 
                   <label className="admin-form-wide">
                     Features (one per line)
