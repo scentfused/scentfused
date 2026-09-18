@@ -68,6 +68,7 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
   const [aiGenerating, setAiGenerating] = useState(false)
   const [aiImage, setAiImage] = useState('')
   const [aiError, setAiError] = useState('')
+  const [aiCopied, setAiCopied] = useState(false)
 
   function handleGenerateAIImage() {
     if (!aiPrompt.trim()) return
@@ -986,28 +987,16 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
 
                 <button
                   type="button"
-                  className="btn btn-solid"
-                  onClick={handleGenerateAIImage}
-                  disabled={aiGenerating || !aiPrompt.trim()}
+                  className="btn btn-line"
+                  onClick={() => {
+                    navigator.clipboard.writeText(aiPrompt)
+                    setAiCopied(true)
+                    setTimeout(() => setAiCopied(false), 1500)
+                  }}
+                  disabled={!aiPrompt.trim()}
                 >
-                  {aiGenerating ? 'Generating…' : 'Generate image'}
+                  {aiCopied ? 'Copied ✓' : 'Copy prompt'}
                 </button>
-
-                {aiError && <p className="admin-form-error">{aiError}</p>}
-
-                {aiImage && (
-                  <div className="ai-image-preview">
-                    <img
-                      src={aiImage}
-                      alt="AI generated preview"
-                      onLoad={() => setAiGenerating(false)}
-                      onError={() => { setAiGenerating(false); setAiError('Could not generate an image — try rewording your prompt.') }}
-                    />
-                    <a href={aiImage} download="ai-generated-image.png" target="_blank" rel="noopener noreferrer" className="btn btn-line">
-                      Download image
-                    </a>
-                  </div>
-                )}
               </div>
             )}
           </section>
