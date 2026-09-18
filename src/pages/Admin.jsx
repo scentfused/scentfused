@@ -41,34 +41,20 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
 
   // Which top-level cards are expanded. Each toggles independently.
   const [openSections, setOpenSections] = useState({ settings: false, product: false, table: false, ai: false })
-  const [aiPrompt, setAiPrompt] = useState('')
+    const [aiPrompt, setAiPrompt] = useState('')
   const [aiGenerating, setAiGenerating] = useState(false)
   const [aiImage, setAiImage] = useState('')
   const [aiError, setAiError] = useState('')
 
-  async function handleGenerateAIImage() {
+  function handleGenerateAIImage() {
     if (!aiPrompt.trim()) return
     setAiGenerating(true)
     setAiError('')
-    setAiImage('')
-    try {
-      const res = await fetch('/api/generate-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: aiPrompt })
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setAiError(data.error || 'Image generation failed.')
-      } else {
-        setAiImage(data.image)
-      }
-    } catch (err) {
-      console.error('AI image generation failed:', err)
-      setAiError('Something went wrong. Please try again.')
-    } finally {
-      setAiGenerating(false)
-    }
+    // A random seed forces a fresh image each time instead of reusing a
+    // cached result for the exact same prompt text.
+    const seed = Math.floor(Math.random() * 1000000)
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(aiPrompt.trim())}?width=1024&height=1024&nologo=true&seed=${seed}`
+    setAiImage(url)
   }
   function toggleSection(key) {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -978,8 +964,13 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
 
                 {aiImage && (
                   <div className="ai-image-preview">
-                    <img src={aiImage} alt="AI generated preview" />
-                    <a href={aiImage} download="ai-generated-image.png" className="btn btn-line">
+                    <img
+                      src={aiImage}
+                      alt="AI generated preview"
+                      onLoad={() => setAiGenerating(false)}
+                      onError={() => { setAiGenerating(false); setAiError('Could not generate an image — try rewording your prompt.') }}
+                    />
+                    <a href={aiImage} download="ai-generated-image.png" target="_blank" rel="noopener noreferrer" className="btn btn-line">
                       Download image
                     </a>
                   </div>
