@@ -965,6 +965,7 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
 
             {openSections.ai && (
               <div className="admin-collapsible-body">
+                <div className="admin-form">
                 <label className="admin-form-wide">
                   Base this on an existing product (optional)
                   <select value={aiSelectedProductId} onChange={(e) => handleSelectAIProduct(e.target.value)}>
@@ -997,6 +998,7 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
                 >
                   {aiCopied ? 'Copied ✓' : 'Copy prompt'}
                 </button>
+                </div>
               </div>
             )}
           </section>
