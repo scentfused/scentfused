@@ -655,16 +655,6 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
                   </div>
 
                   <label className="admin-form-wide">
-                  Base this on an existing product (optional)
-                  <select value={aiSelectedProductId} onChange={(e) => handleSelectAIProduct(e.target.value)}>
-                    <option value="">Choose a product…</option>
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="admin-form-wide">
                   Describe the image you want
                   <textarea
                     rows="3"
@@ -974,6 +964,16 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
 
             {openSections.ai && (
               <div className="admin-collapsible-body">
+                <label className="admin-form-wide">
+                  Base this on an existing product (optional)
+                  <select value={aiSelectedProductId} onChange={(e) => handleSelectAIProduct(e.target.value)}>
+                    <option value="">Choose a product…</option>
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </label>
+
                 <label className="admin-form-wide">
                   Describe the image you want
                   <textarea
