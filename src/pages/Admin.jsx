@@ -40,10 +40,46 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
   const [pendingUpdate, setPendingUpdate] = useState(null)
 
   // Which top-level cards are expanded. Each toggles independently.
-  const [openSections, setOpenSections] = useState({ settings: false, product: false, table: false, ai: false })
-    const [aiPrompt, setAiPrompt] = useState('')
+  const [openSections, setOpenSections] = useState({ settings: false, product: false, table: false, ai: false, adInfographic: false })
+  const [aiPrompt, setAiPrompt] = useState('')
   const [aiSelectedProductId, setAiSelectedProductId] = useState('')
+  const [adPrompt, setAdPrompt] = useState('')
+  const [adSelectedProductId, setAdSelectedProductId] = useState('')
+  const [adCopied, setAdCopied] = useState(false)
 
+  function buildAdInfographicPrompt(product) {
+    const topNotes = (product.attributes?.topNotes || []).join(', ') || '—'
+    const heartNotes = (product.attributes?.heartNotes || []).join(', ') || '—'
+    const baseNotes = (product.attributes?.baseNotes || []).join(', ') || '—'
+    const oneLiner = product.note || product.description || product.name
+
+    return `Create a luxury perfume advertisement infographic in a vertical 4:5 portrait format. Ultra-realistic, cinematic product photography style. The entire image has a seamless pitch black background (#000000) across both the left and right sides, with only gold accents and gold typography. No green, no other background colors.
+
+LEFT SIDE (hero scene): Use the uploaded perfume bottle image exactly as it is. Do not change the bottle's shape, colors, label, or text. Remove the original photo background and place the bottle on the pitch black background.
+
+The bottle sits on a glossy black reflective surface with soft golden reflections beneath it. Around it in the foreground: ${topNotes}, shown as fresh, realistic ingredients with warm golden highlights against the black background.
+
+RIGHT SIDE (info panel): On the same pitch black background, the title "FRAGRANCE NOTES" in large gold serif capitals with a small ornamental gold divider below it. Three sections, each with a gold heading flanked by thin gold horizontal lines and three realistic ingredient photos with centered gold labels beneath:
+- TOP NOTES: ${topNotes}
+- HEART NOTES: ${heartNotes}
+- BASE NOTES: ${baseNotes}
+
+At the bottom, centered gold serif text: "${oneLiner}". Finish with a thin ornamental gold divider.
+
+Color palette: pitch black and metallic gold only (the bottle and ingredients keep their natural colors). All text, dividers, lines, and decorative elements are gold.
+
+Lighting: dramatic low-key lighting, warm golden rim light on the bottle, glossy reflections, shallow depth of field, rich contrast, 8K, sharp details, premium luxury branding. Render all text exactly as written, with correct spelling.`
+  }
+
+  function handleSelectAdProduct(productId) {
+    setAdSelectedProductId(productId)
+    if (!productId) return
+    const product = products.find((p) => String(p.id) === String(productId))
+    if (product) {
+      setAdPrompt(buildAdInfographicPrompt(product))
+    }
+  }
+  
   function buildPromptFromProduct(product) {
     const fieldDefs = CATEGORY_FIELDS[product.category] || []
     const notesParts = []
@@ -986,7 +1022,7 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
                   />
                 </label>
 
-                <button
+                                <button
                   type="button"
                   className="btn btn-line"
                   onClick={() => {
@@ -1003,6 +1039,52 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
             )}
           </section>
 
+          {/* ---------- AI ad infographic prompt ---------- */}
+          <section className={`admin-collapsible ${openSections.adInfographic ? 'open' : ''}`}>
+            <button type="button" className="admin-collapsible-head" onClick={() => toggleSection('adInfographic')}>
+              <span>AI Ad Infographic Prompt</span>
+              <span className="admin-collapsible-arrow">▾</span>
+            </button>
+
+            {openSections.adInfographic && (
+              <div className="admin-collapsible-body">
+                <div className="admin-form">
+                  <label className="admin-form-wide">
+                    Base this on an existing product
+                    <select value={adSelectedProductId} onChange={(e) => handleSelectAdProduct(e.target.value)}>
+                      <option value="">Choose a product…</option>
+                      {products.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="admin-form-wide">
+                    Generated prompt
+                    <textarea
+                      rows="14"
+                      value={adPrompt}
+                      onChange={(e) => setAdPrompt(e.target.value)}
+                      placeholder="Pick a product above to generate the infographic prompt"
+                    />
+                  </label>
+
+                  <button
+                    type="button"
+                    className="btn btn-line"
+                    onClick={() => {
+                      navigator.clipboard.writeText(adPrompt)
+                      setAdCopied(true)
+                      setTimeout(() => setAdCopied(false), 1500)
+                    }}
+                    disabled={!adPrompt.trim()}
+                  >
+                    {adCopied ? 'Copied ✓' : 'Copy prompt'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
           {/* ---------- Add product ---------- */}
           
           <section className={`admin-collapsible ${openSections.product ? 'open' : ''}`}>
