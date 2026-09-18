@@ -40,7 +40,36 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
   const [pendingUpdate, setPendingUpdate] = useState(null)
 
   // Which top-level cards are expanded. Each toggles independently.
-  const [openSections, setOpenSections] = useState({ settings: false, product: false, table: false })
+  const [openSections, setOpenSections] = useState({ settings: false, product: false, table: false, ai: false })
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [aiGenerating, setAiGenerating] = useState(false)
+  const [aiImage, setAiImage] = useState('')
+  const [aiError, setAiError] = useState('')
+
+  async function handleGenerateAIImage() {
+    if (!aiPrompt.trim()) return
+    setAiGenerating(true)
+    setAiError('')
+    setAiImage('')
+    try {
+      const res = await fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: aiPrompt })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setAiError(data.error || 'Image generation failed.')
+      } else {
+        setAiImage(data.image)
+      }
+    } catch (err) {
+      console.error('AI image generation failed:', err)
+      setAiError('Something went wrong. Please try again.')
+    } finally {
+      setAiGenerating(false)
+    }
+  }
   function toggleSection(key) {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
   }
@@ -917,7 +946,50 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
             )}
           </section>
 
+          {/* ---------- AI image generation ---------- */}
+          <section className={`admin-collapsible ${openSections.ai ? 'open' : ''}`}>
+            <button type="button" className="admin-collapsible-head" onClick={() => toggleSection('ai')}>
+              <span>AI Image Generation</span>
+              <span className="admin-collapsible-arrow">▾</span>
+            </button>
+
+            {openSections.ai && (
+              <div className="admin-collapsible-body">
+                <label className="admin-form-wide">
+                  Describe the image you want
+                  <textarea
+                    rows="3"
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder="e.g. A luxury amber perfume bottle on black marble, dramatic lighting, product photography"
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  className="btn btn-solid"
+                  onClick={handleGenerateAIImage}
+                  disabled={aiGenerating || !aiPrompt.trim()}
+                >
+                  {aiGenerating ? 'Generating…' : 'Generate image'}
+                </button>
+
+                {aiError && <p className="admin-form-error">{aiError}</p>}
+
+                {aiImage && (
+                  <div className="ai-image-preview">
+                    <img src={aiImage} alt="AI generated preview" />
+                    <a href={aiImage} download="ai-generated-image.png" className="btn btn-line">
+                      Download image
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+
           {/* ---------- Add product ---------- */}
+          
           <section className={`admin-collapsible ${openSections.product ? 'open' : ''}`}>
             <button type="button" className="admin-collapsible-head" onClick={() => toggleSection('product')}>
               <span>Add a product</span>
