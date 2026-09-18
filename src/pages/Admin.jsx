@@ -59,11 +59,11 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
 
 LEFT SIDE (hero scene): perfume bottle [uploaded image]
 
-Background: a glowing arched stained-glass window in purple and gold tones, soft golden bokeh and floating sparkles, large deep-purple flowers and yellow osmanthus blossoms on the left, and an ornate brass incense burner with a thin curl of smoke at the bottom left. The atmosphere is dreamy and luxurious, with a warm golden light glow from the upper left.
+Background: pitch black background
 
 Foreground on a glossy dark black marble surface with soft reflections: ${topNotes} (realistic, isolated ingredient photos) and ${baseNotes} (realistic, isolated ingredient photos)
 
-RIGHT SIDE (info panel): On a pitch black gradient background with subtle gold sparkle dust, three sections. Each has a gold serif capital heading, centered above a thin gold horizontal line with a small diamond ornament in the middle. Below each heading is a row of realistic, isolated ingredient photos with centered white serif labels beneath.
+RIGHT SIDE (info panel): On a pitch black background, three sections. Each has a gold serif capital heading, centered above a thin gold horizontal line with a small diamond ornament in the middle. Below each heading is a row of realistic, isolated ingredient photos with centered gold serif labels beneath.
 
 - TOP NOTES : ${topNotes}
 - HEART NOTES : ${heartNotes}
