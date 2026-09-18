@@ -40,12 +40,46 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
   const [pendingUpdate, setPendingUpdate] = useState(null)
 
   // Which top-level cards are expanded. Each toggles independently.
-  const [openSections, setOpenSections] = useState({ settings: false, product: false, table: false, ai: false, adInfographic: false })
+  const [openSections, setOpenSections] = useState({ settings: false, product: false, table: false, ai: false, adInfographic: false, royalInfographic: false })
   const [aiPrompt, setAiPrompt] = useState('')
   const [aiSelectedProductId, setAiSelectedProductId] = useState('')
-  const [adPrompt, setAdPrompt] = useState('')
+    const [adPrompt, setAdPrompt] = useState('')
   const [adSelectedProductId, setAdSelectedProductId] = useState('')
   const [adCopied, setAdCopied] = useState(false)
+  const [royalPrompt, setRoyalPrompt] = useState('')
+  const [royalSelectedProductId, setRoyalSelectedProductId] = useState('')
+  const [royalCopied, setRoyalCopied] = useState(false)
+
+  function buildRoyalInfographicPrompt(product) {
+    const topNotes = (product.attributes?.topNotes || []).join(', ') || '—'
+    const heartNotes = (product.attributes?.heartNotes || []).join(', ') || '—'
+    const baseNotes = (product.attributes?.baseNotes || []).join(', ') || '—'
+
+    return `Create a luxury perfume advertisement infographic in a 4:5 format. Ultra-realistic, cinematic product photography. Opulent, magical, regal mood.
+
+LEFT SIDE (hero scene): perfume bottle [uploaded image]
+
+Background: a glowing arched stained-glass window in purple and gold tones, soft golden bokeh and floating sparkles, large deep-purple flowers and yellow osmanthus blossoms on the left, and an ornate brass incense burner with a thin curl of smoke at the bottom left. The atmosphere is dreamy and luxurious, with a warm golden light glow from the upper left.
+
+Foreground on a glossy dark black marble surface with soft reflections: ${topNotes} (realistic, isolated ingredient photos) and ${baseNotes} (realistic, isolated ingredient photos)
+
+RIGHT SIDE (info panel): On a pitch black gradient background with subtle gold sparkle dust, three sections. Each has a gold serif capital heading, centered above a thin gold horizontal line with a small diamond ornament in the middle. Below each heading is a row of realistic, isolated ingredient photos with centered white serif labels beneath.
+
+- TOP NOTES : ${topNotes}
+- HEART NOTES : ${heartNotes}
+- BASE NOTES : ${baseNotes}
+
+Lighting: dramatic warm golden lighting with rim light on the bottle, glossy reflections, shallow depth of field, rich contrast, 8K, sharp details, premium luxury branding. Render all text exactly as written, with correct spelling.`
+  }
+
+  function handleSelectRoyalProduct(productId) {
+    setRoyalSelectedProductId(productId)
+    if (!productId) return
+    const product = products.find((p) => String(p.id) === String(productId))
+    if (product) {
+      setRoyalPrompt(buildRoyalInfographicPrompt(product))
+    }
+  }
 
   function buildAdInfographicPrompt(product) {
     const topNotes = (product.attributes?.topNotes || []).join(', ') || '—'
@@ -1022,18 +1056,65 @@ Lighting: dramatic low-key lighting, warm golden rim light on the bottle, glossy
                   />
                 </label>
 
-                                <button
-                  type="button"
-                  className="btn btn-line"
-                  onClick={() => {
-                    navigator.clipboard.writeText(aiPrompt)
-                    setAiCopied(true)
-                    setTimeout(() => setAiCopied(false), 1500)
-                  }}
-                  disabled={!aiPrompt.trim()}
-                >
-                  {aiCopied ? 'Copied ✓' : 'Copy prompt'}
-                </button>
+                                  <button
+                    type="button"
+                    className="btn btn-line"
+                    onClick={() => {
+                      navigator.clipboard.writeText(adPrompt)
+                      setAdCopied(true)
+                      setTimeout(() => setAdCopied(false), 1500)
+                    }}
+                    disabled={!adPrompt.trim()}
+                  >
+                    {adCopied ? 'Copied ✓' : 'Copy prompt'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* ---------- AI regal/opulent infographic prompt ---------- */}
+          <section className={`admin-collapsible ${openSections.royalInfographic ? 'open' : ''}`}>
+            <button type="button" className="admin-collapsible-head" onClick={() => toggleSection('royalInfographic')}>
+              <span>AI Regal Infographic Prompt</span>
+              <span className="admin-collapsible-arrow">▾</span>
+            </button>
+
+            {openSections.royalInfographic && (
+              <div className="admin-collapsible-body">
+                <div className="admin-form">
+                  <label className="admin-form-wide">
+                    Base this on an existing product
+                    <select value={royalSelectedProductId} onChange={(e) => handleSelectRoyalProduct(e.target.value)}>
+                      <option value="">Choose a product…</option>
+                      {products.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="admin-form-wide">
+                    Generated prompt
+                    <textarea
+                      rows="14"
+                      value={royalPrompt}
+                      onChange={(e) => setRoyalPrompt(e.target.value)}
+                      placeholder="Pick a product above to generate the infographic prompt"
+                    />
+                  </label>
+
+             <button
+                    type="button"
+                    className="btn btn-line"
+                    onClick={() => {
+                      navigator.clipboard.writeText(royalPrompt)
+                      setRoyalCopied(true)
+                      setTimeout(() => setRoyalCopied(false), 1500)
+                    }}
+                    disabled={!royalPrompt.trim()}
+                  >
+                    {royalCopied ? 'Copied ✓' : 'Copy prompt'}
+                  </button>
                 </div>
               </div>
             )}
