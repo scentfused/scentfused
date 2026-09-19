@@ -28,6 +28,7 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
     const current = Array.isArray(draft.attributes?.[fieldKey]) ? draft.attributes[fieldKey] : []
     setDraft({ ...draft, attributes: { ...draft.attributes, [fieldKey]: current.filter((_, i) => i !== index) } })
   }
+
   const [editingId, setEditingId] = useState(null)
   const [imageError, setImageError] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -39,46 +40,64 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
   const [originalProduct, setOriginalProduct] = useState(null)
   const [pendingUpdate, setPendingUpdate] = useState(null)
 
-  // Which top-level cards are expanded. Each toggles independently.
-  const [openSections, setOpenSections] = useState({ settings: false, product: false, table: false, ai: false, adInfographic: false, royalInfographic: false })
+  // Which section is showing in the main panel. Sidebar buttons set this.
+  const [activeSection, setActiveSection] = useState('table')
+
   const [aiPrompt, setAiPrompt] = useState('')
   const [aiSelectedProductId, setAiSelectedProductId] = useState('')
-    const [adPrompt, setAdPrompt] = useState('')
+  const [aiGenerating, setAiGenerating] = useState(false)
+  const [aiImage, setAiImage] = useState('')
+  const [aiError, setAiError] = useState('')
+  const [aiCopied, setAiCopied] = useState(false)
+
+  const [adPrompt, setAdPrompt] = useState('')
   const [adSelectedProductId, setAdSelectedProductId] = useState('')
   const [adCopied, setAdCopied] = useState(false)
+
   const [royalPrompt, setRoyalPrompt] = useState('')
   const [royalSelectedProductId, setRoyalSelectedProductId] = useState('')
   const [royalCopied, setRoyalCopied] = useState(false)
 
-  function buildRoyalInfographicPrompt(product) {
-    const topNotes = (product.attributes?.topNotes || []).join(', ') || '—'
-    const heartNotes = (product.attributes?.heartNotes || []).join(', ') || '—'
-    const baseNotes = (product.attributes?.baseNotes || []).join(', ') || '—'
+  function buildPromptFromProduct(product) {
+    const fieldDefs = CATEGORY_FIELDS[product.category] || []
+    const notesParts = []
+    ;['topNotes', 'heartNotes', 'baseNotes'].forEach((key) => {
+      const value = product.attributes?.[key]
+      if (Array.isArray(value) && value.length > 0) notesParts.push(value[0])
+    })
+    const noteText = notesParts.length > 0 ? notesParts.join(', ') : (product.note || '')
+    const categoryLabel = CATEGORIES.find((c) => c.key === product.category)?.label || product.category
 
-    return `Create a luxury perfume advertisement infographic in a 4:5 format. Ultra-realistic, cinematic product photography. Opulent, magical, regal mood.
-
-LEFT SIDE (hero scene): perfume bottle [uploaded image]
-
-Background: pitch black background
-
-Foreground on a glossy dark black marble surface with soft reflections: ${topNotes} (realistic, isolated ingredient photos) and ${baseNotes} (realistic, isolated ingredient photos)
-
-RIGHT SIDE (info panel): On a pitch black background, three sections. Each has a gold serif capital heading, centered above a thin gold horizontal line with a small diamond ornament in the middle. Below each heading is a row of realistic, isolated ingredient photos with centered gold serif labels beneath.
-
-- TOP NOTES : ${topNotes}
-- HEART NOTES : ${heartNotes}
-- BASE NOTES : ${baseNotes}
-
-Lighting: dramatic warm golden lighting with rim light on the bottle, glossy reflections, shallow depth of field, rich contrast, 8K, sharp details, premium luxury branding. Render all text exactly as written, with correct spelling.`
+    return `A luxury product photograph of "${product.name}", a ${categoryLabel.toLowerCase()} with notes of ${noteText || 'fine fragrance'}. Elegant glass bottle, dramatic studio lighting, black background, gold accents, high-end e-commerce photography style.`
   }
 
-  function handleSelectRoyalProduct(productId) {
-    setRoyalSelectedProductId(productId)
+  function handleSelectAIProduct(productId) {
+    setAiSelectedProductId(productId)
     if (!productId) return
     const product = products.find((p) => String(p.id) === String(productId))
     if (product) {
-      setRoyalPrompt(buildRoyalInfographicPrompt(product))
+      setAiPrompt(buildPromptFromProduct(product))
     }
+  }
+
+  function handleGenerateAIImage() {
+    if (!aiPrompt.trim()) return
+    setAiGenerating(true)
+    setAiError('')
+    // A random seed forces a fresh image each time instead of reusing a
+    // cached result for the exact same prompt text.
+    const seed = Math.floor(Math.random() * 1000000)
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(aiPrompt.trim())}?width=1024&height=1024&nologo=true&seed=${seed}`
+    setAiImage(url)
+  }
+
+  function clearAIImageSection() {
+    setAiSelectedProductId('')
+    setAiPrompt('')
+    setAiImage('')
+    setAiError('')
+    setAiGenerating(false)
+    setAiCopied(false)
   }
 
   function buildAdInfographicPrompt(product) {
@@ -113,45 +132,48 @@ Lighting: dramatic low-key lighting, warm golden rim light on the bottle, glossy
       setAdPrompt(buildAdInfographicPrompt(product))
     }
   }
-  
-  function buildPromptFromProduct(product) {
-    const fieldDefs = CATEGORY_FIELDS[product.category] || []
-    const notesParts = []
-    ;['topNotes', 'heartNotes', 'baseNotes'].forEach((key) => {
-      const value = product.attributes?.[key]
-      if (Array.isArray(value) && value.length > 0) notesParts.push(value[0])
-    })
-    const noteText = notesParts.length > 0 ? notesParts.join(', ') : (product.note || '')
-    const categoryLabel = CATEGORIES.find((c) => c.key === product.category)?.label || product.category
 
-    return `A luxury product photograph of "${product.name}", a ${categoryLabel.toLowerCase()} with notes of ${noteText || 'fine fragrance'}. Elegant glass bottle, dramatic studio lighting, black background, gold accents, high-end e-commerce photography style.`
+  function clearAdInfographicSection() {
+    setAdSelectedProductId('')
+    setAdPrompt('')
+    setAdCopied(false)
   }
 
-  function handleSelectAIProduct(productId) {
-    setAiSelectedProductId(productId)
+  function buildRoyalInfographicPrompt(product) {
+    const topNotes = (product.attributes?.topNotes || []).join(', ') || '—'
+    const heartNotes = (product.attributes?.heartNotes || []).join(', ') || '—'
+    const baseNotes = (product.attributes?.baseNotes || []).join(', ') || '—'
+
+    return `Create a luxury perfume advertisement infographic in a 4:5 format. Ultra-realistic, cinematic product photography. Opulent, magical, regal mood.
+
+LEFT SIDE (hero scene): perfume bottle [uploaded image]
+
+Background: pitch black background
+
+Foreground on a glossy dark black marble surface with soft reflections: ${topNotes} (realistic, isolated ingredient photos) and ${baseNotes} (realistic, isolated ingredient photos)
+
+RIGHT SIDE (info panel): On a pitch black background, three sections. Each has a gold serif capital heading, centered above a thin gold horizontal line with a small diamond ornament in the middle. Below each heading is a row of realistic, isolated ingredient photos with centered gold serif labels beneath.
+
+- TOP NOTES : ${topNotes}
+- HEART NOTES : ${heartNotes}
+- BASE NOTES : ${baseNotes}
+
+Lighting: dramatic warm golden lighting with rim light on the bottle, glossy reflections, shallow depth of field, rich contrast, 8K, sharp details, premium luxury branding. Render all text exactly as written, with correct spelling.`
+  }
+
+  function handleSelectRoyalProduct(productId) {
+    setRoyalSelectedProductId(productId)
     if (!productId) return
     const product = products.find((p) => String(p.id) === String(productId))
     if (product) {
-      setAiPrompt(buildPromptFromProduct(product))
+      setRoyalPrompt(buildRoyalInfographicPrompt(product))
     }
   }
-  const [aiGenerating, setAiGenerating] = useState(false)
-  const [aiImage, setAiImage] = useState('')
-  const [aiError, setAiError] = useState('')
-  const [aiCopied, setAiCopied] = useState(false)
 
-  function handleGenerateAIImage() {
-    if (!aiPrompt.trim()) return
-    setAiGenerating(true)
-    setAiError('')
-    // A random seed forces a fresh image each time instead of reusing a
-    // cached result for the exact same prompt text.
-    const seed = Math.floor(Math.random() * 1000000)
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(aiPrompt.trim())}?width=1024&height=1024&nologo=true&seed=${seed}`
-    setAiImage(url)
-  }
-  function toggleSection(key) {
-    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }))
+  function clearRoyalInfographicSection() {
+    setRoyalSelectedProductId('')
+    setRoyalPrompt('')
+    setRoyalCopied(false)
   }
 
   // Carousel picker (Site settings > Homepage)
@@ -214,7 +236,6 @@ Lighting: dramatic low-key lighting, warm golden rim light on the bottle, glossy
     setOriginalProduct(null)
     setPendingUpdate(null)
     setGalleryError('')
-    setGalleryUrlInput('')
   }
 
   function buildChanges(original, payload) {
@@ -375,7 +396,6 @@ Lighting: dramatic low-key lighting, warm golden rim light on the bottle, glossy
     })
 
     setGalleryError('')
-    setGalleryUrlInput('')
     setDraft({
       name: product.name,
       category: product.category,
@@ -390,7 +410,7 @@ Lighting: dramatic low-key lighting, warm golden rim light on the bottle, glossy
       sku: product.sku || '',
       salePrice: product.sale_price ? String(product.sale_price) : ''
     })
-    setOpenSections((prev) => ({ ...prev, table: true }))
+    setActiveSection('table')
     setTimeout(() => {
       document.getElementById(`edit-row-${product.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }, 50)
@@ -507,366 +527,365 @@ Lighting: dramatic low-key lighting, warm golden rim light on the bottle, glossy
   function renderProductForm() {
     return (
       <>
-                  <form
-                    onSubmit={handleSubmit}
-                    className="admin-form"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
-                        e.preventDefault()
-                      }
-                    }}
-                  >
-                  <label>
-                    Category
-                    <select
-                      value={draft.category}
-                      onChange={(e) => setDraft({ ...draft, category: e.target.value, attributes: {} })}
-                    >
-                      {CATEGORIES.map((c) => (
-                        <option key={c.key} value={c.key}>{c.label}</option>
-                      ))}
-                    </select>
-                  </label>
+        <form
+          onSubmit={handleSubmit}
+          className="admin-form"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+              e.preventDefault()
+            }
+          }}
+        >
+          <label>
+            Category
+            <select
+              value={draft.category}
+              onChange={(e) => setDraft({ ...draft, category: e.target.value, attributes: {} })}
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c.key} value={c.key}>{c.label}</option>
+              ))}
+            </select>
+          </label>
 
-                  <label>
-                    Name
+          <label>
+            Name
+            <input
+              type="text"
+              value={draft.name}
+              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              placeholder="e.g. Noir Oud"
+              required
+            />
+          </label>
+
+          {(CATEGORY_FIELDS[draft.category] || [])
+            .filter((field) => field.key !== 'season' && field.key !== 'occasion')
+            .map((field) => (
+              <label key={field.key} className={field.type === 'tags' ? 'admin-form-wide' : ''}>
+                {field.label}
+
+                {field.type === 'text' && (
+                  <input
+                    type="text"
+                    value={draft.attributes?.[field.key] || ''}
+                    onChange={(e) =>
+                      setDraft({ ...draft, attributes: { ...draft.attributes, [field.key]: e.target.value } })
+                    }
+                  />
+                )}
+
+                {field.type === 'select' && (
+                  <select
+                    value={draft.attributes?.[field.key] || ''}
+                    onChange={(e) =>
+                      setDraft({ ...draft, attributes: { ...draft.attributes, [field.key]: e.target.value } })
+                    }
+                  >
+                    <option value="">Select…</option>
+                    {field.options.map((opt) => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                )}
+
+                {field.type === 'tags' && (
+                  <div className="tag-input-box">
+                    <div className="tag-chip-list">
+                      {(Array.isArray(draft.attributes?.[field.key]) ? draft.attributes[field.key] : []).map((tag, i) => (
+                        <span className="tag-chip" key={`${tag}-${i}`}>
+                          {tag}
+                          <button type="button" onClick={() => removeTag(field.key, i)} aria-label={`Remove ${tag}`}>&times;</button>
+                        </span>
+                      ))}
+                    </div>
                     <input
                       type="text"
-                      value={draft.name}
-                      onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                      placeholder="e.g. Noir Oud"
-                      required
+                      value={tagInputs[field.key] || ''}
+                      onChange={(e) => setTagInputs((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                          e.preventDefault()
+                          addTag(field.key, tagInputs[field.key] || '')
+                        } else if (e.key === 'Backspace' && !tagInputs[field.key]) {
+                          const current = Array.isArray(draft.attributes?.[field.key]) ? draft.attributes[field.key] : []
+                          if (current.length > 0) removeTag(field.key, current.length - 1)
+                        }
+                      }}
+                      onBlur={() => addTag(field.key, tagInputs[field.key] || '')}
+                      placeholder="Type a note, press Enter"
                     />
-                  </label>
-
-                  {(CATEGORY_FIELDS[draft.category] || [])
-                    .filter((field) => field.key !== 'season' && field.key !== 'occasion')
-                    .map((field) => (
-                      <label key={field.key} className={field.type === 'tags' ? 'admin-form-wide' : ''}>
-                        {field.label}
-
-                        {field.type === 'text' && (
-                          <input
-                            type="text"
-                            value={draft.attributes?.[field.key] || ''}
-                            onChange={(e) =>
-                              setDraft({ ...draft, attributes: { ...draft.attributes, [field.key]: e.target.value } })
-                            }
-                          />
-                        )}
-
-                        {field.type === 'select' && (
-                          <select
-                            value={draft.attributes?.[field.key] || ''}
-                            onChange={(e) =>
-                              setDraft({ ...draft, attributes: { ...draft.attributes, [field.key]: e.target.value } })
-                            }
-                          >
-                            <option value="">Select…</option>
-                            {field.options.map((opt) => (
-                              <option key={opt} value={opt}>{opt}</option>
-                            ))}
-                          </select>
-                        )}
-
-                        {field.type === 'tags' && (
-                          <div className="tag-input-box">
-                            <div className="tag-chip-list">
-                              {(Array.isArray(draft.attributes?.[field.key]) ? draft.attributes[field.key] : []).map((tag, i) => (
-                                <span className="tag-chip" key={`${tag}-${i}`}>
-                                  {tag}
-                                  <button type="button" onClick={() => removeTag(field.key, i)} aria-label={`Remove ${tag}`}>&times;</button>
-                                </span>
-                              ))}
-                            </div>
-                            <input
-                              type="text"
-                              value={tagInputs[field.key] || ''}
-                              onChange={(e) => setTagInputs((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ',') {
-                                  e.preventDefault()
-                                  addTag(field.key, tagInputs[field.key] || '')
-                                } else if (e.key === 'Backspace' && !tagInputs[field.key]) {
-                                  const current = Array.isArray(draft.attributes?.[field.key]) ? draft.attributes[field.key] : []
-                                  if (current.length > 0) removeTag(field.key, current.length - 1)
-                                }
-                              }}
-                              onBlur={() => addTag(field.key, tagInputs[field.key] || '')}
-                              placeholder="Type a note, press Enter"
-                            />
-                          </div>
-                        )}
-                      </label>
-                    ))}
-
-                  {(() => {
-                    const fields = CATEGORY_FIELDS[draft.category] || []
-                    const seasonField = fields.find((f) => f.key === 'season')
-                    const occasionField = fields.find((f) => f.key === 'occasion')
-
-                    function renderCheckboxes(field) {
-                      const current = draft.attributes?.[field.key] || []
-                      return (
-                        <div className="attribute-checkboxes">
-                          {field.options.map((opt) => {
-                            const checked = current.includes(opt)
-                            return (
-                              <label key={opt} className="attribute-checkbox">
-                                <input
-                                  type="checkbox"
-                                  checked={checked}
-                                  onChange={(e) => {
-                                    const next = e.target.checked
-                                      ? [...current, opt]
-                                      : current.filter((v) => v !== opt)
-                                    setDraft({ ...draft, attributes: { ...draft.attributes, [field.key]: next } })
-                                  }}
-                                />
-                                {opt}
-                              </label>
-                            )
-                          })}
-                        </div>
-                      )
-                    }
-
-                    return (
-                      <div className="admin-form-wide season-occasion-row">
-                        {seasonField && (
-                          <div className="season-occasion-col">
-                            <span className="variants-label">{seasonField.label}</span>
-                            {renderCheckboxes(seasonField)}
-                          </div>
-                        )}
-                        {occasionField && (
-                          <div className="season-occasion-col">
-                            <span className="variants-label">{occasionField.label}</span>
-                            {renderCheckboxes(occasionField)}
-                          </div>
-                        )}
-                        <div className="season-occasion-col">
-                          <label>
-                            Note (short blurb shown on product cards)
-                            <input
-                              type="text"
-                              value={draft.note}
-                              onChange={(e) => setDraft({ ...draft, note: e.target.value })}
-                              placeholder="e.g. Smoked oud, dark amber, leather"
-                            />
-                          </label>
-                        </div>
-                      </div>
-                    )
-                  })()}
-
-                  <div className="admin-form-wide sku-sale-row">
-                    <label>
-                      SKU
-                      <input
-                        type="text"
-                        value={draft.sku || ''}
-                        onChange={(e) => setDraft({ ...draft, sku: e.target.value })}
-                        placeholder="e.g. SF-PER-001"
-                      />
-                    </label>
-                    <label>
-                      Sale price (Rs.) — optional
-                      <input
-                        type="number"
-                        min="0"
-                        value={draft.salePrice || ''}
-                        onChange={(e) => setDraft({ ...draft, salePrice: e.target.value })}
-                        placeholder="Leave blank if not on sale"
-                      />
-                    </label>
-                  </div>
-
-                  <div className="admin-form-wide">
-                    <span className="variants-label">Variants — size and price (at least one required)</span>
-                    {(draft.variants || []).map((v, i) => (
-                      <div className="variant-row" key={i}>
-                        <input
-                          type="text"
-                          placeholder="Label, e.g. 30ml"
-                          value={v.label}
-                          onChange={(e) => {
-                            const next = [...draft.variants]
-                            next[i] = { ...next[i], label: e.target.value }
-                            setDraft({ ...draft, variants: next })
-                          }}
-                        />
-                        <input
-                          type="number"
-                          min="0"
-                          placeholder="Price, e.g. 3800"
-                          value={v.price}
-                          onChange={(e) => {
-                            const next = [...draft.variants]
-                            next[i] = { ...next[i], price: e.target.value }
-                            setDraft({ ...draft, variants: next })
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="variant-remove"
-                          onClick={() => setDraft({ ...draft, variants: draft.variants.filter((_, j) => j !== i) })}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      className="btn btn-line"
-                      onClick={() => setDraft({ ...draft, variants: [...(draft.variants || []), { label: '', price: '' }] })}
-                    >
-                      + Add variant
-                    </button>
-                  </div>
-
-                  <label className="admin-form-wide">
-                  Describe the image you want
-                  <textarea
-                    rows="3"
-                    value={aiPrompt}
-                    onChange={(e) => setAiPrompt(e.target.value)}
-                    placeholder="e.g. A luxury amber perfume bottle on black marble, dramatic lighting, product photography"
-                  />
-                </label>
-
-                  <label className="admin-form-wide">
-                    Features (one per line)
-                    <textarea
-                      rows="4"
-                      value={draft.features || ''}
-                      onChange={(e) => setDraft({ ...draft, features: e.target.value })}
-                      placeholder={'Long-lasting 8+ hour wear\nAlcohol-free formula\nHandcrafted in small batches'}
-                    />
-                  </label>
-
-                  <label className="admin-form-wide">
-                    Usage / how to use
-                    <textarea
-                      rows="3"
-                      value={draft.usage || ''}
-                      onChange={(e) => setDraft({ ...draft, usage: e.target.value })}
-                      placeholder="e.g. Apply to pulse points after showering for best longevity."
-                    />
-                  </label>
-
-                  <label className="admin-form-wide">
-                    Image URL
-                    <input
-                      type="url"
-                      value={draft.image.startsWith('data:') ? '' : draft.image}
-                      onChange={(e) => setDraft({ ...draft, image: e.target.value })}
-                      placeholder="https://example.com/photo.jpg"
-                    />
-                  </label>
-
-                  <label className="admin-form-wide">
-                    Or upload an image
-                    <input type="file" accept="image/*" onChange={handleImageFile} disabled={uploading} />
-                  </label>
-
-                  {uploading && <p className="admin-form-wide muted">Uploading image…</p>}
-                  {imageError && <p className="admin-form-error admin-form-wide">{imageError}</p>}
-
-                  {draft.image && (
-                    <div className="admin-form-wide image-preview">
-                      <img src={draft.image} alt="Preview" />
-                      <button type="button" onClick={() => setDraft({ ...draft, image: '' })}>
-                        Remove image
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="admin-form-wide">
-                    <span className="variants-label">Additional images (optional gallery for the product page)</span>
-
-                    {(draft.images || []).map((url, i) => (
-                      <div className="gallery-row" key={i}>
-                        {url && (
-                          <div className="gallery-row-thumb">
-                            <img src={url} alt={`Gallery ${i + 1}`} />
-                          </div>
-                        )}
-                        <input
-                          type="url"
-                          placeholder="https://example.com/photo.jpg"
-                          value={url}
-                          onChange={(e) => updateGalleryImageUrl(i, e.target.value)}
-                        />
-                        <label className="gallery-row-upload">
-                          Upload
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleGalleryImageFile(i, e)}
-                            disabled={galleryUploadingIndex === i}
-                          />
-                        </label>
-                        <button
-                          type="button"
-                          className="variant-remove"
-                          onClick={() => removeGalleryImage(i)}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-
-                    {galleryUploadingIndex !== null && <p className="muted">Uploading image…</p>}
-                    {galleryError && <p className="admin-form-error">{galleryError}</p>}
-
-                    <button type="button" className="btn btn-line" onClick={addGalleryImageRow}>
-                      + Add another image
-                    </button>
-                  </div>
-
-                  <div className="admin-form-actions">
-                    <button type="submit" className="btn btn-solid" disabled={saving || uploading}>
-                      {saving ? 'Saving…' : editingId ? 'Review changes' : 'Add product'}
-                    </button>
-                    {editingId && (
-                      <button type="button" className="btn btn-line" onClick={resetForm}>
-                        Cancel
-                      </button>
-                    )}
-                  </div>
-                </form>
-
-                {pendingUpdate && (
-                  <div className="admin-review-panel">
-                    <h3>Review changes</h3>
-                    {pendingUpdate.changes.length === 0 ? (
-                      <p className="muted">No changes detected.</p>
-                    ) : (
-                      <ul className="admin-review-list">
-                        {pendingUpdate.changes.map((c, i) => (
-                          <li key={i}>
-                            <strong>{c.label}</strong>
-                            <span className="admin-review-from">{c.from}</span>
-                            <span className="admin-review-arrow">→</span>
-                            <span className="admin-review-to">{c.to}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    <div className="admin-form-actions">
-                      <button type="button" className="btn btn-solid" onClick={confirmUpdate} disabled={saving}>
-                        {saving ? 'Updating…' : 'Update product'}
-                      </button>
-                      <button type="button" className="btn btn-line" onClick={cancelReview}>
-                        Back to edit
-                      </button>
-                    </div>
                   </div>
                 )}
+              </label>
+            ))}
+
+          {(() => {
+            const fields = CATEGORY_FIELDS[draft.category] || []
+            const seasonField = fields.find((f) => f.key === 'season')
+            const occasionField = fields.find((f) => f.key === 'occasion')
+
+            function renderCheckboxes(field) {
+              const current = draft.attributes?.[field.key] || []
+              return (
+                <div className="attribute-checkboxes">
+                  {field.options.map((opt) => {
+                    const checked = current.includes(opt)
+                    return (
+                      <label key={opt} className="attribute-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => {
+                            const next = e.target.checked
+                              ? [...current, opt]
+                              : current.filter((v) => v !== opt)
+                            setDraft({ ...draft, attributes: { ...draft.attributes, [field.key]: next } })
+                          }}
+                        />
+                        {opt}
+                      </label>
+                    )
+                  })}
+                </div>
+              )
+            }
+
+            return (
+              <div className="admin-form-wide season-occasion-row">
+                {seasonField && (
+                  <div className="season-occasion-col">
+                    <span className="variants-label">{seasonField.label}</span>
+                    {renderCheckboxes(seasonField)}
+                  </div>
+                )}
+                {occasionField && (
+                  <div className="season-occasion-col">
+                    <span className="variants-label">{occasionField.label}</span>
+                    {renderCheckboxes(occasionField)}
+                  </div>
+                )}
+                <div className="season-occasion-col">
+                  <label>
+                    Note (short blurb shown on product cards)
+                    <input
+                      type="text"
+                      value={draft.note}
+                      onChange={(e) => setDraft({ ...draft, note: e.target.value })}
+                      placeholder="e.g. Smoked oud, dark amber, leather"
+                    />
+                  </label>
+                </div>
+              </div>
+            )
+          })()}
+
+          <div className="admin-form-wide sku-sale-row">
+            <label>
+              SKU
+              <input
+                type="text"
+                value={draft.sku || ''}
+                onChange={(e) => setDraft({ ...draft, sku: e.target.value })}
+                placeholder="e.g. SF-PER-001"
+              />
+            </label>
+            <label>
+              Sale price (Rs.) — optional
+              <input
+                type="number"
+                min="0"
+                value={draft.salePrice || ''}
+                onChange={(e) => setDraft({ ...draft, salePrice: e.target.value })}
+                placeholder="Leave blank if not on sale"
+              />
+            </label>
+          </div>
+
+          <div className="admin-form-wide">
+            <span className="variants-label">Variants — size and price (at least one required)</span>
+            {(draft.variants || []).map((v, i) => (
+              <div className="variant-row" key={i}>
+                <input
+                  type="text"
+                  placeholder="Label, e.g. 30ml"
+                  value={v.label}
+                  onChange={(e) => {
+                    const next = [...draft.variants]
+                    next[i] = { ...next[i], label: e.target.value }
+                    setDraft({ ...draft, variants: next })
+                  }}
+                />
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Price, e.g. 3800"
+                  value={v.price}
+                  onChange={(e) => {
+                    const next = [...draft.variants]
+                    next[i] = { ...next[i], price: e.target.value }
+                    setDraft({ ...draft, variants: next })
+                  }}
+                />
+                <button
+                  type="button"
+                  className="variant-remove"
+                  onClick={() => setDraft({ ...draft, variants: draft.variants.filter((_, j) => j !== i) })}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              className="btn btn-line"
+              onClick={() => setDraft({ ...draft, variants: [...(draft.variants || []), { label: '', price: '' }] })}
+            >
+              + Add variant
+            </button>
+          </div>
+
+          <label className="admin-form-wide">
+            Features (one per line)
+            <textarea
+              rows="4"
+              value={draft.features || ''}
+              onChange={(e) => setDraft({ ...draft, features: e.target.value })}
+              placeholder={'Long-lasting 8+ hour wear\nAlcohol-free formula\nHandcrafted in small batches'}
+            />
+          </label>
+
+          <label className="admin-form-wide">
+            Usage / how to use
+            <textarea
+              rows="3"
+              value={draft.usage || ''}
+              onChange={(e) => setDraft({ ...draft, usage: e.target.value })}
+              placeholder="e.g. Apply to pulse points after showering for best longevity."
+            />
+          </label>
+
+          <label className="admin-form-wide">
+            Image URL
+            <input
+              type="url"
+              value={draft.image.startsWith('data:') ? '' : draft.image}
+              onChange={(e) => setDraft({ ...draft, image: e.target.value })}
+              placeholder="https://example.com/photo.jpg"
+            />
+          </label>
+
+          <label className="admin-form-wide">
+            Or upload an image
+            <input type="file" accept="image/*" onChange={handleImageFile} disabled={uploading} />
+          </label>
+
+          {uploading && <p className="admin-form-wide muted">Uploading image…</p>}
+          {imageError && <p className="admin-form-error admin-form-wide">{imageError}</p>}
+
+          {draft.image && (
+            <div className="admin-form-wide image-preview">
+              <img src={draft.image} alt="Preview" />
+              <button type="button" onClick={() => setDraft({ ...draft, image: '' })}>
+                Remove image
+              </button>
+            </div>
+          )}
+
+          <div className="admin-form-wide">
+            <span className="variants-label">Additional images (optional gallery for the product page)</span>
+
+            {(draft.images || []).map((url, i) => (
+              <div className="gallery-row" key={i}>
+                {url && (
+                  <div className="gallery-row-thumb">
+                    <img src={url} alt={`Gallery ${i + 1}`} />
+                  </div>
+                )}
+                <input
+                  type="url"
+                  placeholder="https://example.com/photo.jpg"
+                  value={url}
+                  onChange={(e) => updateGalleryImageUrl(i, e.target.value)}
+                />
+                <label className="gallery-row-upload">
+                  Upload
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleGalleryImageFile(i, e)}
+                    disabled={galleryUploadingIndex === i}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="variant-remove"
+                  onClick={() => removeGalleryImage(i)}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+
+            {galleryUploadingIndex !== null && <p className="muted">Uploading image…</p>}
+            {galleryError && <p className="admin-form-error">{galleryError}</p>}
+
+            <button type="button" className="btn btn-line" onClick={addGalleryImageRow}>
+              + Add another image
+            </button>
+          </div>
+
+          <div className="admin-form-actions">
+            <button type="submit" className="btn btn-solid" disabled={saving || uploading}>
+              {saving ? 'Saving…' : editingId ? 'Review changes' : 'Add product'}
+            </button>
+            {editingId && (
+              <button type="button" className="btn btn-line" onClick={resetForm}>
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+
+        {pendingUpdate && (
+          <div className="admin-review-panel">
+            <h3>Review changes</h3>
+            {pendingUpdate.changes.length === 0 ? (
+              <p className="muted">No changes detected.</p>
+            ) : (
+              <ul className="admin-review-list">
+                {pendingUpdate.changes.map((c, i) => (
+                  <li key={i}>
+                    <strong>{c.label}</strong>
+                    <span className="admin-review-from">{c.from}</span>
+                    <span className="admin-review-arrow">→</span>
+                    <span className="admin-review-to">{c.to}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="admin-form-actions">
+              <button type="button" className="btn btn-solid" onClick={confirmUpdate} disabled={saving}>
+                {saving ? 'Updating…' : 'Update product'}
+              </button>
+              <button type="button" className="btn btn-line" onClick={cancelReview}>
+                Back to edit
+              </button>
+            </div>
+          </div>
+        )}
       </>
     )
   }
+
+  const NAV_ITEMS = [
+    { key: 'settings', label: 'Site Settings' },
+    { key: 'ai', label: 'AI Image Generation' },
+    { key: 'royalInfographic', label: 'AI Regal Infographic Prompt' },
+    { key: 'adInfographic', label: 'AI Ad Infographic Prompt' },
+    { key: 'product', label: 'Add a Product' },
+    { key: 'table', label: 'Products' }
+  ]
 
   return (
     <div className="admin">
@@ -893,16 +912,27 @@ Lighting: dramatic low-key lighting, warm golden rim light on the bottle, glossy
           ))}
         </section>
 
-        <div className="admin-accordion">
-          {/* ---------- Site settings ---------- */}
-          <section className={`admin-collapsible ${openSections.settings ? 'open' : ''}`}>
-            <button type="button" className="admin-collapsible-head" onClick={() => toggleSection('settings')}>
-              <span>Site settings</span>
-              <span className="admin-collapsible-arrow">▾</span>
-            </button>
+        <div className="admin-layout">
+          <aside className="admin-sidebar">
+            <nav>
+              {NAV_ITEMS.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  className={activeSection === item.key ? 'active' : ''}
+                  onClick={() => setActiveSection(item.key)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+          </aside>
 
-            {openSections.settings && (
-              <div className="admin-collapsible-body">
+          <main className="admin-main">
+            {/* ---------- Site settings ---------- */}
+            {activeSection === 'settings' && (
+              <section className="admin-panel">
+                <h2 className="admin-panel-title">Site settings</h2>
                 <div className="settings-grid">
                   <div className="settings-group">
                     <h3 className="settings-group-title">Branding</h3>
@@ -1022,66 +1052,83 @@ Lighting: dramatic low-key lighting, warm golden rim light on the bottle, glossy
                     </label>
                   </div>
                 </div>
-              </div>
+              </section>
             )}
-          </section>
 
-          {/* ---------- AI image generation ---------- */}
-          <section className={`admin-collapsible ${openSections.ai ? 'open' : ''}`}>
-            <button type="button" className="admin-collapsible-head" onClick={() => toggleSection('ai')}>
-              <span>AI Image Generation</span>
-              <span className="admin-collapsible-arrow">▾</span>
-            </button>
-
-            {openSections.ai && (
-              <div className="admin-collapsible-body">
+            {/* ---------- AI image generation ---------- */}
+            {activeSection === 'ai' && (
+              <section className="admin-panel">
+                <h2 className="admin-panel-title">AI Image Generation</h2>
                 <div className="admin-form">
-                <label className="admin-form-wide">
-                  Base this on an existing product (optional)
-                  <select value={aiSelectedProductId} onChange={(e) => handleSelectAIProduct(e.target.value)}>
-                    <option value="">Choose a product…</option>
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                </label>
+                  <label className="admin-form-wide">
+                    Base this on an existing product (optional)
+                    <select value={aiSelectedProductId} onChange={(e) => handleSelectAIProduct(e.target.value)}>
+                      <option value="">Choose a product…</option>
+                      {products.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </label>
 
-                <label className="admin-form-wide">
-                  Describe the image you want
-                  <textarea
-                    rows="3"
-                    value={aiPrompt}
-                    onChange={(e) => setAiPrompt(e.target.value)}
-                    placeholder="e.g. A luxury amber perfume bottle on black marble, dramatic lighting, product photography"
-                  />
-                </label>
+                  <label className="admin-form-wide">
+                    Describe the image you want
+                    <textarea
+                      rows="3"
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      placeholder="e.g. A luxury amber perfume bottle on black marble, dramatic lighting, product photography"
+                    />
+                  </label>
 
-                                  <button
-                    type="button"
-                    className="btn btn-line"
-                    onClick={() => {
-                      navigator.clipboard.writeText(adPrompt)
-                      setAdCopied(true)
-                      setTimeout(() => setAdCopied(false), 1500)
-                    }}
-                    disabled={!adPrompt.trim()}
-                  >
-                    {adCopied ? 'Copied ✓' : 'Copy prompt'}
-                  </button>
+                  <div className="admin-form-actions">
+                    <button
+                      type="button"
+                      className="btn btn-solid"
+                      onClick={handleGenerateAIImage}
+                      disabled={aiGenerating || !aiPrompt.trim()}
+                    >
+                      {aiGenerating ? 'Generating…' : 'Generate image'}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-line"
+                      onClick={() => {
+                        navigator.clipboard.writeText(aiPrompt)
+                        setAiCopied(true)
+                        setTimeout(() => setAiCopied(false), 1500)
+                      }}
+                      disabled={!aiPrompt.trim()}
+                    >
+                      {aiCopied ? 'Copied ✓' : 'Copy prompt'}
+                    </button>
+                    <button type="button" className="btn btn-line" onClick={clearAIImageSection}>
+                      Clear
+                    </button>
+                  </div>
+
+                  {aiError && <p className="admin-form-error">{aiError}</p>}
+
+                  {aiImage && (
+                    <div className="ai-image-preview">
+                      <img
+                        src={aiImage}
+                        alt="AI generated preview"
+                        onLoad={() => setAiGenerating(false)}
+                        onError={() => { setAiGenerating(false); setAiError('Could not generate an image — try rewording your prompt.') }}
+                      />
+                      <a href={aiImage} download="ai-generated-image.png" target="_blank" rel="noopener noreferrer" className="btn btn-line">
+                        Download image
+                      </a>
+                    </div>
+                  )}
                 </div>
-              </div>
+              </section>
             )}
-          </section>
 
-          {/* ---------- AI regal/opulent infographic prompt ---------- */}
-          <section className={`admin-collapsible ${openSections.royalInfographic ? 'open' : ''}`}>
-            <button type="button" className="admin-collapsible-head" onClick={() => toggleSection('royalInfographic')}>
-              <span>AI Regal Infographic Prompt</span>
-              <span className="admin-collapsible-arrow">▾</span>
-            </button>
-
-            {openSections.royalInfographic && (
-              <div className="admin-collapsible-body">
+            {/* ---------- AI regal/opulent infographic prompt ---------- */}
+            {activeSection === 'royalInfographic' && (
+              <section className="admin-panel">
+                <h2 className="admin-panel-title">AI Regal Infographic Prompt</h2>
                 <div className="admin-form">
                   <label className="admin-form-wide">
                     Base this on an existing product
@@ -1103,32 +1150,31 @@ Lighting: dramatic low-key lighting, warm golden rim light on the bottle, glossy
                     />
                   </label>
 
-             <button
-                    type="button"
-                    className="btn btn-line"
-                    onClick={() => {
-                      navigator.clipboard.writeText(royalPrompt)
-                      setRoyalCopied(true)
-                      setTimeout(() => setRoyalCopied(false), 1500)
-                    }}
-                    disabled={!royalPrompt.trim()}
-                  >
-                    {royalCopied ? 'Copied ✓' : 'Copy prompt'}
-                  </button>
+                  <div className="admin-form-actions">
+                    <button
+                      type="button"
+                      className="btn btn-line"
+                      onClick={() => {
+                        navigator.clipboard.writeText(royalPrompt)
+                        setRoyalCopied(true)
+                        setTimeout(() => setRoyalCopied(false), 1500)
+                      }}
+                      disabled={!royalPrompt.trim()}
+                    >
+                      {royalCopied ? 'Copied ✓' : 'Copy prompt'}
+                    </button>
+                    <button type="button" className="btn btn-line" onClick={clearRoyalInfographicSection}>
+                      Clear
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </section>
             )}
-          </section>
 
-          {/* ---------- AI ad infographic prompt ---------- */}
-          <section className={`admin-collapsible ${openSections.adInfographic ? 'open' : ''}`}>
-            <button type="button" className="admin-collapsible-head" onClick={() => toggleSection('adInfographic')}>
-              <span>AI Ad Infographic Prompt</span>
-              <span className="admin-collapsible-arrow">▾</span>
-            </button>
-
-            {openSections.adInfographic && (
-              <div className="admin-collapsible-body">
+            {/* ---------- AI ad infographic prompt ---------- */}
+            {activeSection === 'adInfographic' && (
+              <section className="admin-panel">
+                <h2 className="admin-panel-title">AI Ad Infographic Prompt</h2>
                 <div className="admin-form">
                   <label className="admin-form-wide">
                     Base this on an existing product
@@ -1150,53 +1196,46 @@ Lighting: dramatic low-key lighting, warm golden rim light on the bottle, glossy
                     />
                   </label>
 
-                  <button
-                    type="button"
-                    className="btn btn-line"
-                    onClick={() => {
-                      navigator.clipboard.writeText(adPrompt)
-                      setAdCopied(true)
-                      setTimeout(() => setAdCopied(false), 1500)
-                    }}
-                    disabled={!adPrompt.trim()}
-                  >
-                    {adCopied ? 'Copied ✓' : 'Copy prompt'}
-                  </button>
+                  <div className="admin-form-actions">
+                    <button
+                      type="button"
+                      className="btn btn-line"
+                      onClick={() => {
+                        navigator.clipboard.writeText(adPrompt)
+                        setAdCopied(true)
+                        setTimeout(() => setAdCopied(false), 1500)
+                      }}
+                      disabled={!adPrompt.trim()}
+                    >
+                      {adCopied ? 'Copied ✓' : 'Copy prompt'}
+                    </button>
+                    <button type="button" className="btn btn-line" onClick={clearAdInfographicSection}>
+                      Clear
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </section>
             )}
-          </section>
-          {/* ---------- Add product ---------- */}
-          
-          <section className={`admin-collapsible ${openSections.product ? 'open' : ''}`}>
-            <button type="button" className="admin-collapsible-head" onClick={() => toggleSection('product')}>
-              <span>Add a product</span>
-              <span className="admin-collapsible-arrow">▾</span>
-            </button>
 
-            {openSections.product && (
-              <div className="admin-collapsible-body">
+            {/* ---------- Add product ---------- */}
+            {activeSection === 'product' && (
+              <section className="admin-panel">
+                <h2 className="admin-panel-title">Add a product</h2>
                 {editingId ? (
                   <p className="muted">
-                    You're currently editing "{originalProduct?.name}" — scroll down to the Products
-                    table below, where the edit form now appears directly under that product.
+                    You're currently editing "{originalProduct?.name}" — go to the Products tab,
+                    where the edit form now appears directly under that product.
                   </p>
                 ) : (
                   renderProductForm()
                 )}
-              </div>
+              </section>
             )}
-          </section>
 
-          {/* ---------- Product table / management ---------- */}
-          <section className={`admin-collapsible ${openSections.table ? 'open' : ''}`}>
-            <button type="button" className="admin-collapsible-head" onClick={() => toggleSection('table')}>
-              <span>Products</span>
-              <span className="admin-collapsible-arrow">▾</span>
-            </button>
-
-            {openSections.table && (
-              <div className="admin-collapsible-body">
+            {/* ---------- Product table / management ---------- */}
+            {activeSection === 'table' && (
+              <section className="admin-panel">
+                <h2 className="admin-panel-title">Products</h2>
                 <div className="admin-table-filters">
                   <input
                     type="text"
@@ -1267,9 +1306,9 @@ Lighting: dramatic low-key lighting, warm golden rim light on the bottle, glossy
                     )}
                   </tbody>
                 </table>
-              </div>
+              </section>
             )}
-          </section>
+          </main>
         </div>
       </div>
     </div>
