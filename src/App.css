@@ -448,13 +448,18 @@ footer{border-top:1px solid var(--hairline);padding:32px 0 20px;}
 .admin-table-head select{
   background:#000;border:1px solid var(--hairline);color:var(--champagne);padding:9px 12px;font-size:13px;
 }
-.admin-table{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed;}
+.admin-table-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.admin-table{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed;min-width:700px;}
 .admin-table th:nth-child(1), .admin-table td:nth-child(1){width:60px;}
-.admin-table th:nth-child(2), .admin-table td:nth-child(2){width:20%;}
-.admin-table th:nth-child(3), .admin-table td:nth-child(3){width:15%;}
+.admin-table th:nth-child(2), .admin-table td:nth-child(2){width:180px;}
+.admin-table th:nth-child(3), .admin-table td:nth-child(3){width:140px;}
 .admin-table th:nth-child(4), .admin-table td:nth-child(4){width:auto;}
 .admin-table th:nth-child(5), .admin-table td:nth-child(5){width:110px;}
 .admin-table th:nth-child(6), .admin-table td:nth-child(6){width:160px;}
+
+@media (max-width:640px){
+  .admin-table{min-width:600px;}
+}
 .admin-table th{
   text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--gold-dim);
   padding:10px 12px;border-bottom:1px solid var(--hairline);font-weight:400;
