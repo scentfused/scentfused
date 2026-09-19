@@ -1257,6 +1257,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                   </select>
                 </div>
 
+                <div className="admin-table-scroll">
                 <table className="admin-table">
                   <thead>
                     <tr>
@@ -1306,6 +1307,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                     )}
                   </tbody>
                 </table>
+                </div>
               </section>
             )}
           </main>
