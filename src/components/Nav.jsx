@@ -1,12 +1,15 @@
 import { useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext.jsx'
 
 const LOGO_URL = 'https://res.cloudinary.com/nqotqftf/image/upload/v1789151310/gold_icon_512px.ico'
 
 export default function Nav() {
   const [open, setOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const { cartCount, setIsCartOpen } = useCart()
+  const navigate = useNavigate()
 
   const links = [
     { to: '/', label: 'Home', end: true },
@@ -20,6 +23,15 @@ export default function Nav() {
     setOpen(false)
   }
 
+  function handleSearchSubmit(e) {
+    e.preventDefault()
+    const q = searchQuery.trim()
+    if (!q) return
+    navigate(`/search?q=${encodeURIComponent(q)}`)
+    setSearchOpen(false)
+    setSearchQuery('')
+  }
+
   return (
     <header className="nav">
       <div className="nav-inner">
@@ -28,15 +40,42 @@ export default function Nav() {
           <span className="brand">scentfused</span>
         </Link>
 
-        <button
-          className="menu-toggle"
-          aria-label="Toggle menu"
-          aria-expanded={open}
-          onClick={() => setOpen((o) => !o)}
-        >
-          ☰
-        </button>
+        <div className="nav-icon-group">
+          <button
+            className="search-toggle"
+            aria-label="Toggle search"
+            aria-expanded={searchOpen}
+            onClick={() => { setSearchOpen((s) => !s); setOpen(false) }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <circle cx="11" cy="11" r="7" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </button>
+
+          <button
+            className="menu-toggle"
+            aria-label="Toggle menu"
+            aria-expanded={open}
+            onClick={() => { setOpen((o) => !o); setSearchOpen(false) }}
+          >
+            ☰
+          </button>
+        </div>
       </div>
+
+      {searchOpen && (
+        <form className="nav-search-bar" onSubmit={handleSearchSubmit}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search products…"
+            autoFocus
+          />
+          <button type="submit">Search</button>
+        </form>
+      )}
 
       <div className={`nav-drawer ${open ? 'open' : ''}`}>
         <ul className="nav-drawer-links">
