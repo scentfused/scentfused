@@ -183,7 +183,21 @@ button{font-family:inherit;}
   transition:border-color .25s ease;
 }
 .promo-banner:hover{border-color:var(--gold-dim);}
-.promo-banner-royal{background:radial-gradie
+.promo-banner-royal{background:radial-gradient(circle at 30% 30%, rgba(212,175,55,0.15), #000 70%);}
+.promo-banner-marina{background:radial-gradient(circle at 70% 30%, rgba(120,170,200,0.12), #000 70%);}
+.promo-banner-eyebrow{
+  font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dim);margin-bottom:10px;
+}
+.promo-banner h3{
+  font-size:30px;color:var(--gold-bright);margin:0 0 16px;font-family:var(--brand-font, 'Robot Monster', sans-serif);
+  text-transform:uppercase;letter-spacing:1px;
+}
+.promo-banner-cta{font-size:13px;color:var(--champagne);letter-spacing:0.5px;}
+
+@media (max-width:760px){
+  .promo-banners-grid{grid-template-columns:1fr;}
+  .promo-banner{padding:36px 28px;min-height:180px;}
+}
 
 /* Admin entry button — always top right of its bar */
 .admin-btn{
