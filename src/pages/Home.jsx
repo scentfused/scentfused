@@ -4,6 +4,7 @@ import Hero from '../components/Hero.jsx'
 import Carousel from '../components/Carousel.jsx'
 import Footer from '../components/Footer.jsx'
 import Icon from '../components/Icon.jsx'
+import PromoBanners from '../components/PromoBanners.jsx'
 import { CATEGORIES, latestNames } from '../data/catalog.js'
 
 export default function Home({ products, settings }) {
@@ -44,7 +45,9 @@ export default function Home({ products, settings }) {
               })}
             </div>
           </div>
-        </section>
+         </section>
+
+        <PromoBanners />
       </main>
       <Footer />
     </div>
