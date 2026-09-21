@@ -36,6 +36,10 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
   const [galleryError, setGalleryError] = useState('')
   const [heroUploading, setHeroUploading] = useState(false)
   const [heroImageError, setHeroImageError] = useState('')
+  const [banner1Uploading, setBanner1Uploading] = useState(false)
+  const [banner1Error, setBanner1Error] = useState('')
+  const [banner2Uploading, setBanner2Uploading] = useState(false)
+  const [banner2Error, setBanner2Error] = useState('')
   const [saving, setSaving] = useState(false)
   const [originalProduct, setOriginalProduct] = useState(null)
   const [pendingUpdate, setPendingUpdate] = useState(null)
@@ -452,6 +456,58 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
       setHeroImageError('Upload failed — please try again, or paste a URL instead.')
     } finally {
       setHeroUploading(false)
+    }
+  }
+
+  async function handleBanner1File(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setBanner1Error('')
+
+    if (!file.type.startsWith('image/')) {
+      setBanner1Error('Please choose an image file.')
+      return
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setBanner1Error('Image is too large — please use a file under 5MB, or paste a URL instead.')
+      return
+    }
+
+    setBanner1Uploading(true)
+    try {
+      const url = await uploadImageToCloudinary(file)
+      setSettings({ ...settings, promoBanner1Image: url })
+    } catch (err) {
+      console.error('Banner 1 image upload failed:', err)
+      setBanner1Error('Upload failed — please try again, or paste a URL instead.')
+    } finally {
+      setBanner1Uploading(false)
+    }
+  }
+
+  async function handleBanner2File(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setBanner2Error('')
+
+    if (!file.type.startsWith('image/')) {
+      setBanner2Error('Please choose an image file.')
+      return
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setBanner2Error('Image is too large — please use a file under 5MB, or paste a URL instead.')
+      return
+    }
+
+    setBanner2Uploading(true)
+    try {
+      const url = await uploadImageToCloudinary(file)
+      setSettings({ ...settings, promoBanner2Image: url })
+    } catch (err) {
+      console.error('Banner 2 image upload failed:', err)
+      setBanner2Error('Upload failed — please try again, or paste a URL instead.')
+    } finally {
+      setBanner2Uploading(false)
     }
   }
 
@@ -986,6 +1042,58 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                       <div className="hero-preview">
                         <img src={settings.heroImage} alt="Hero background preview" />
                         <button type="button" className="btn btn-line" onClick={() => setSettings({ ...settings, heroImage: '' })}>
+                          Remove
+                        </button>
+                      </div>
+                    )}
+
+                    <label className="admin-form-wide" style={{ marginTop: '20px' }}>
+                      Royal Collection banner photo
+                      <input type="file" accept="image/*" onChange={handleBanner1File} disabled={banner1Uploading} />
+                    </label>
+                    {banner1Uploading && <p className="admin-form-wide muted">Uploading image…</p>}
+                    {banner1Error && <p className="admin-form-error admin-form-wide">{banner1Error}</p>}
+
+                    <label className="settings-row">
+                      Or paste an image URL
+                      <input
+                        type="text"
+                        value={settings.promoBanner1Image || ''}
+                        onChange={(e) => setSettings({ ...settings, promoBanner1Image: e.target.value })}
+                        placeholder="https://..."
+                      />
+                    </label>
+
+                    {settings.promoBanner1Image && (
+                      <div className="hero-preview">
+                        <img src={settings.promoBanner1Image} alt="Royal Collection banner preview" />
+                        <button type="button" className="btn btn-line" onClick={() => setSettings({ ...settings, promoBanner1Image: '' })}>
+                          Remove
+                        </button>
+                      </div>
+                    )}
+
+                    <label className="admin-form-wide" style={{ marginTop: '20px' }}>
+                      Marina Collection banner photo
+                      <input type="file" accept="image/*" onChange={handleBanner2File} disabled={banner2Uploading} />
+                    </label>
+                    {banner2Uploading && <p className="admin-form-wide muted">Uploading image…</p>}
+                    {banner2Error && <p className="admin-form-error admin-form-wide">{banner2Error}</p>}
+
+                    <label className="settings-row">
+                      Or paste an image URL
+                      <input
+                        type="text"
+                        value={settings.promoBanner2Image || ''}
+                        onChange={(e) => setSettings({ ...settings, promoBanner2Image: e.target.value })}
+                        placeholder="https://..."
+                      />
+                    </label>
+
+                    {settings.promoBanner2Image && (
+                      <div className="hero-preview">
+                        <img src={settings.promoBanner2Image} alt="Marina Collection banner preview" />
+                        <button type="button" className="btn btn-line" onClick={() => setSettings({ ...settings, promoBanner2Image: '' })}>
                           Remove
                         </button>
                       </div>
