@@ -47,7 +47,7 @@ export default function Home({ products, settings }) {
           </div>
          </section>
 
-        <PromoBanners />
+        <PromoBanners banner1Image={settings.promoBanner1Image} banner2Image={settings.promoBanner2Image} />
       </main>
       <Footer />
     </div>
