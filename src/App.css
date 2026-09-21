@@ -146,6 +146,45 @@ button{font-family:inherit;}
 .cart-btn{background:none;border:none;color:var(--champagne);cursor:pointer;display:flex;align-items:center;gap:6px;}
 .cart-btn:hover{color:var(--gold-bright);}
 
+/* ---------- Nav: search icon + expandable bar ---------- */
+.nav-icon-group{display:flex;align-items:center;gap:8px;}
+.search-toggle{
+  display:flex;align-items:center;justify-content:center;
+  width:40px;height:40px;background:none;border:1px solid var(--hairline);
+  color:var(--champagne);cursor:pointer;
+}
+.search-toggle:hover{border-color:var(--gold-dim);color:var(--gold-bright);}
+.nav-search-bar{
+  display:flex;gap:0;background:#000;border-bottom:1px solid var(--hairline);padding:14px 24px;
+}
+.nav-search-bar input{
+  flex:1;background:#111;border:1px solid var(--hairline);color:var(--champagne);
+  padding:10px 14px;font-size:14px;
+}
+.nav-search-bar input:focus{outline:none;border-color:var(--gold-dim);}
+.nav-search-bar button{
+  background:var(--gold);color:#000;border:none;padding:10px 20px;
+  font-weight:600;cursor:pointer;font-size:13px;letter-spacing:0.5px;text-transform:uppercase;
+}
+
+/* ---------- Search results page ---------- */
+.search-results-page{padding:48px 32px;}
+.search-results-page h1{font-size:26px;margin-bottom:6px;}
+.search-no-results{margin-top:24px;}
+.search-no-results a{color:var(--gold-bright);}
+
+/* ---------- Homepage: promo banners ---------- */
+.promo-banners{border-top:1px solid var(--hairline);padding:48px 0;}
+.promo-banners-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+.promo-banner{
+  position:relative;display:flex;flex-direction:column;justify-content:center;
+  padding:48px 40px;min-height:220px;text-decoration:none;
+  border:1px solid var(--hairline);background:#000;overflow:hidden;
+  transition:border-color .25s ease;
+}
+.promo-banner:hover{border-color:var(--gold-dim);}
+.promo-banner-royal{background:radial-gradie
+
 /* Admin entry button — always top right of its bar */
 .admin-btn{
   display:inline-block;
