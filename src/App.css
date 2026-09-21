@@ -97,7 +97,7 @@ a{color:inherit;text-decoration:none;}
 img,svg{display:block;max-width:100%;}
 button{font-family:inherit;}
 
-.wrap{max-width:var(--max);margin:0 auto;padding:0 32px;}
+.wrap{width:100%;margin:0 auto;padding:0 48px;box-sizing:border-box;}
 .app-shell{min-height:100vh;}
 :focus-visible{outline:1px solid var(--gold-bright);outline-offset:3px;}
 
