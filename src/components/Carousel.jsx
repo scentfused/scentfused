@@ -42,7 +42,7 @@ export default function Carousel({ products, autoplay = true, showBadge = true }
     <section className="section" id="latest">
       <div className="wrap">
         <div className="section-head">
-          <div>
+          <div className="section-head-inline">
             <h2>Latest arrivals</h2>
             <p>Freshly poured and freshly bottled — the newest additions across the collection.</p>
           </div>
