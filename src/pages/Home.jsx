@@ -17,6 +17,7 @@ export default function Home({ products, settings }) {
       <Nav />
       <main>
       <Hero heroImage={settings.heroImage} />
+        <PromoBanners banner1Image={settings.promoBanner1Image} banner2Image={settings.promoBanner2Image} />
         <Carousel
           products={latest}
           autoplay={settings.carouselAutoplay}
