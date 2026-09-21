@@ -109,9 +109,8 @@ button{font-family:inherit;}
   border-bottom:1px solid var(--hairline);
 }
 .nav-inner{
-  display:flex;align-items:center;justify-content:space-between;
-  font-size:25px;
-  padding:18px 32px;max-width:var(--max);margin:0 auto;
+  display:flex !important;align-items:center;justify-content:space-between;
+  padding:16px 24px;width:100%;max-width:none;box-sizing:border-box;
 }
 .brand{
   font-family:var(--brand-font, 'Robot Monster', sans-serif);
@@ -940,6 +939,7 @@ footer{border-top:1px solid var(--hairline);padding:32px 0 20px;}
   display:flex !important;align-items:center;justify-content:space-between;
   padding:16px 24px;
 }
+header.nav{width:100%;}
 .brand-lockup{display:flex;align-items:center;gap:10px;text-decoration:none;}
 .brand-logo{width:32px;height:32px;object-fit:contain;}
 
