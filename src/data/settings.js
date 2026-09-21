@@ -30,5 +30,7 @@ export const defaultSettings = {
   showNewBadge: true,
   carouselAutoplay: true,
   heroImage: '',
-  carouselProductIds: []
+  carouselProductIds: [],
+  promoBanner1Image: '',
+  promoBanner2Image: ''
 }
