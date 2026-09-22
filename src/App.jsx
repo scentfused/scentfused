@@ -78,7 +78,9 @@ export default function App() {
           promoBanner1Image: settingsRes.data.promo_banner_1_image || '',
           promoBanner2Image: settingsRes.data.promo_banner_2_image || '',
           promoBanner1Font: settingsRes.data.promo_banner_1_font || 'Robot Monster',
-          promoBanner2Font: settingsRes.data.promo_banner_2_font || 'Robot Monster'
+          promoBanner2Font: settingsRes.data.promo_banner_2_font || 'Robot Monster',
+          promoBanner1FontSize: settingsRes.data.promo_banner_1_font_size || 30,
+          promoBanner2FontSize: settingsRes.data.promo_banner_2_font_size || 30
         })
       }
 
@@ -115,7 +117,9 @@ export default function App() {
         promo_banner_1_image: next.promoBanner1Image || null,
         promo_banner_2_image: next.promoBanner2Image || null,
         promo_banner_1_font: next.promoBanner1Font || null,
-        promo_banner_2_font: next.promoBanner2Font || null
+        promo_banner_2_font: next.promoBanner2Font || null,
+        promo_banner_1_font_size: next.promoBanner1FontSize || null,
+        promo_banner_2_font_size: next.promoBanner2FontSize || null
       })
       .eq('id', 1)
     if (error) console.error('Failed to save settings:', error)
