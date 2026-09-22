@@ -2,6 +2,15 @@ import { useState } from 'react'
 import { useCart } from '../context/CartContext.jsx'
 import Icon from './Icon.jsx'
 
+function getDisplayNote(product) {
+  if (product.note && product.note.trim()) return product.note
+  const attrs = product.attributes || {}
+  const firstTop = Array.isArray(attrs.topNotes) ? attrs.topNotes[0] : null
+  const firstHeart = Array.isArray(attrs.heartNotes) ? attrs.heartNotes[0] : null
+  const firstBase = Array.isArray(attrs.baseNotes) ? attrs.baseNotes[0] : null
+  return [firstTop, firstHeart, firstBase].filter(Boolean).join(', ')
+}
+
 export default function QuickView() {
   const { quickViewProduct, setQuickViewProduct, addToCart } = useCart()
   const [selectedVariant, setSelectedVariant] = useState(null)
@@ -12,8 +21,13 @@ export default function QuickView() {
   const product = quickViewProduct
   const variants = product.variants || []
   const activeVariant = selectedVariant || variants[0] || null
-  const displayPrice = activeVariant ? activeVariant.price : product.price
-  const showSale = Boolean(product.sale_price) && displayPrice === product.price
+
+  // Each variant can have its own sale price now — fall back to the
+  // product-level values only when there's no variant at all.
+  const originalPrice = activeVariant ? activeVariant.price : product.price
+  const effectiveSalePrice = activeVariant ? activeVariant.salePrice : product.sale_price
+  const showSale = Boolean(effectiveSalePrice) && Number(effectiveSalePrice) < Number(originalPrice)
+  const displayPrice = showSale ? effectiveSalePrice : originalPrice
 
   function close() {
     setQuickViewProduct(null)
@@ -37,15 +51,13 @@ export default function QuickView() {
 
         <div className="quickview-info">
           <h3>{product.name}</h3>
-          <p className="note">{product.note}</p>
+          <p className="note">{getDisplayNote(product)}</p>
           <p className="price">
             {showSale ? (
-              <>
               <span className="price-stack">
-                <span className="price-was">Rs. {Number(displayPrice).toLocaleString()}</span>
-                <span className="price-sale">Rs. {Number(product.sale_price).toLocaleString()}</span>
+                <span className="price-was">Rs. {Number(originalPrice).toLocaleString()}</span>
+                <span className="price-sale">Rs. {Number(displayPrice).toLocaleString()}</span>
               </span>
-              </>
             ) : (
               <>Rs. {Number(displayPrice).toLocaleString()}</>
             )}
