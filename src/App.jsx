@@ -76,7 +76,9 @@ export default function App() {
           heroImage: settingsRes.data.hero_image || '',
           carouselProductIds: settingsRes.data.carousel_product_ids || [],
           promoBanner1Image: settingsRes.data.promo_banner_1_image || '',
-          promoBanner2Image: settingsRes.data.promo_banner_2_image || ''
+          promoBanner2Image: settingsRes.data.promo_banner_2_image || '',
+          promoBanner1Font: settingsRes.data.promo_banner_1_font || 'Robot Monster',
+          promoBanner2Font: settingsRes.data.promo_banner_2_font || 'Robot Monster'
         })
       }
 
@@ -111,7 +113,9 @@ export default function App() {
         hero_image: next.heroImage || null,
         carousel_product_ids: next.carouselProductIds || [],
         promo_banner_1_image: next.promoBanner1Image || null,
-        promo_banner_2_image: next.promoBanner2Image || null
+        promo_banner_2_image: next.promoBanner2Image || null,
+        promo_banner_1_font: next.promoBanner1Font || null,
+        promo_banner_2_font: next.promoBanner2Font || null
       })
       .eq('id', 1)
     if (error) console.error('Failed to save settings:', error)
