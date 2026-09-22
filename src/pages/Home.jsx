@@ -16,12 +16,14 @@ export default function Home({ products, settings }) {
     <div>
       <Nav />
       <main>
-            <Hero heroImage={settings.heroImage} />
-        <PromoBanners
+       <Hero heroImage={settings.heroImage} />
+         <PromoBanners
           banner1Image={settings.promoBanner1Image}
           banner2Image={settings.promoBanner2Image}
           banner1Font={settings.promoBanner1Font}
           banner2Font={settings.promoBanner2Font}
+          banner1FontSize={settings.promoBanner1FontSize}
+          banner2FontSize={settings.promoBanner2FontSize}
         />
         <Carousel
           products={latest}
