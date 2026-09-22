@@ -34,5 +34,7 @@ export const defaultSettings = {
   promoBanner1Image: '',
   promoBanner2Image: '',
   promoBanner1Font: 'Robot Monster',
-  promoBanner2Font: 'Robot Monster'
+  promoBanner2Font: 'Robot Monster',
+  promoBanner1FontSize: 30,
+  promoBanner2FontSize: 30
 }
