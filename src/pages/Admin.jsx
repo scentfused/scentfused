@@ -72,6 +72,7 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
 
   // Which section is showing in the main panel. Sidebar buttons set this.
   const [activeSection, setActiveSection] = useState('table')
+  const [sidebarOpen, setSidebarOpen] = useState(true)
 
   const [aiPrompt, setAiPrompt] = useState('')
   const [aiSelectedProductId, setAiSelectedProductId] = useState('')
@@ -978,7 +979,17 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
   return (
     <div className="admin">
       <header className="admin-topbar">
-        <span className="brand">scentfused <em>admin</em></span>
+        <div className="admin-topbar-left">
+          <button
+            type="button"
+            className="admin-sidebar-toggle"
+            aria-label={sidebarOpen ? 'Collapse menu' : 'Expand menu'}
+            onClick={() => setSidebarOpen((o) => !o)}
+          >
+            ☰
+          </button>
+          <span className="brand">scentfused <em>admin</em></span>
+        </div>
         <Link className="admin-btn" to="/">View site</Link>
       </header>
 
@@ -1001,7 +1012,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
         </section>
 
         <div className="admin-layout">
-          <aside className="admin-sidebar">
+          <aside className={`admin-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
             <nav>
               {NAV_ITEMS.map((item) => (
                 <button
