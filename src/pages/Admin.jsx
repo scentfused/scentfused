@@ -1085,6 +1085,17 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                       </select>
                     </label>
 
+                    <label className="settings-row">
+                      Royal Collection font size (px)
+                      <input
+                        type="number"
+                        min="12"
+                        max="80"
+                        value={settings.promoBanner1FontSize || 30}
+                        onChange={(e) => setSettings({ ...settings, promoBanner1FontSize: Number(e.target.value) })}
+                      />
+                    </label>
+
                     <label className="admin-form-wide" style={{ marginTop: '20px' }}>
                       Marina Collection banner photo
                       <input type="file" accept="image/*" onChange={handleBanner2File} disabled={banner2Uploading} />
@@ -1121,6 +1132,17 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                           <option key={font} value={font}>{font}</option>
                         ))}
                       </select>
+                    </label>
+
+                    <label className="settings-row">
+                      Marina Collection font size (px)
+                      <input
+                        type="number"
+                        min="12"
+                        max="80"
+                        value={settings.promoBanner2FontSize || 30}
+                        onChange={(e) => setSettings({ ...settings, promoBanner2FontSize: Number(e.target.value) })}
+                      />
                     </label>
                   </div>
 
