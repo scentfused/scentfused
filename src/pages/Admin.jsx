@@ -8,6 +8,21 @@ import { uploadImageToCloudinary } from '../lib/cloudinary.js'
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5MB, Cloudinary handles storage/optimization now
 
+// Formats a database timestamp for the admin product table only — never
+// shown anywhere on the public storefront.
+function formatTimestamp(value) {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (isNaN(date.getTime())) return '—'
+  return date.toLocaleString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit'
+  })
+}
+
 export default function Admin({ products, setProducts, settings, setSettings }) {
   const [draft, setDraft] = useState(emptyDraft())
   const [tagInputs, setTagInputs] = useState({})
@@ -1426,6 +1441,8 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                       <th>Category</th>
                       <th>Note</th>
                       <th>Price</th>
+                      <th>Added</th>
+                      <th>Last edited</th>
                       <th></th>
                     </tr>
                   </thead>
@@ -1444,6 +1461,8 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                           <td>{CATEGORIES.find((c) => c.key === p.category)?.label}</td>
                           <td className="muted">{p.note}</td>
                           <td>Rs. {Number(p.price).toLocaleString()}</td>
+                          <td className="muted admin-timestamp">{formatTimestamp(p.created_at)}</td>
+                          <td className="muted admin-timestamp">{formatTimestamp(p.updated_at)}</td>
                           <td className="admin-row-actions">
                             <button onClick={() => (editingId === p.id ? resetForm() : handleEdit(p))}>
                               {editingId === p.id ? 'Close' : 'Edit'}
@@ -1453,7 +1472,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                         </tr>
                         {editingId === p.id && (
                           <tr id={`edit-row-${p.id}`}>
-                            <td colSpan="6" className="admin-inline-edit-cell">
+                            <td colSpan="8" className="admin-inline-edit-cell">
                               {renderProductForm()}
                             </td>
                           </tr>
@@ -1462,7 +1481,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                     ))}
                     {visible.length === 0 && (
                       <tr>
-                        <td colSpan="6" className="muted">No products match these filters.</td>
+                        <td colSpan="8" className="muted">No products match these filters.</td>
                       </tr>
                     )}
                   </tbody>
