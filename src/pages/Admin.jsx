@@ -1073,6 +1073,18 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                       </div>
                     )}
 
+                    <label className="settings-row">
+                      Royal Collection banner font
+                      <select
+                        value={settings.promoBanner1Font || 'Robot Monster'}
+                        onChange={(e) => setSettings({ ...settings, promoBanner1Font: e.target.value })}
+                      >
+                        {FONT_OPTIONS.map((font) => (
+                          <option key={font} value={font}>{font}</option>
+                        ))}
+                      </select>
+                    </label>
+
                     <label className="admin-form-wide" style={{ marginTop: '20px' }}>
                       Marina Collection banner photo
                       <input type="file" accept="image/*" onChange={handleBanner2File} disabled={banner2Uploading} />
@@ -1098,6 +1110,18 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                         </button>
                       </div>
                     )}
+
+                    <label className="settings-row">
+                      Marina Collection banner font
+                      <select
+                        value={settings.promoBanner2Font || 'Robot Monster'}
+                        onChange={(e) => setSettings({ ...settings, promoBanner2Font: e.target.value })}
+                      >
+                        {FONT_OPTIONS.map((font) => (
+                          <option key={font} value={font}>{font}</option>
+                        ))}
+                      </select>
+                    </label>
                   </div>
 
                   <div className="settings-group">
