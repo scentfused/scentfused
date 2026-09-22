@@ -994,7 +994,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
       </header>
 
       <div className="wrap admin-wrap">
-        <section className="admin-stats">
+        <section className={`admin-stats ${sidebarOpen ? 'open' : 'closed'}`}>
           <div className="stat-card">
             <span className="stat-label">Total products</span>
             <span className="stat-value">{stats.total}</span>
