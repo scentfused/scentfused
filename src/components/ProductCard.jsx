@@ -5,6 +5,18 @@ import Icon from './Icon.jsx'
 
 const HOVER_ATTRIBUTE_KEYS = ['topNotes', 'heartNotes', 'baseNotes', 'concentration']
 
+// If a product's short "Note" blurb was never saved (or the auto-fill from
+// tags didn't trigger for some reason), fall back to building one on the fly
+// from its first Top/Heart/Base note instead of showing a blank line.
+function getDisplayNote(product) {
+  if (product.note && product.note.trim()) return product.note
+  const attrs = product.attributes || {}
+  const firstTop = Array.isArray(attrs.topNotes) ? attrs.topNotes[0] : null
+  const firstHeart = Array.isArray(attrs.heartNotes) ? attrs.heartNotes[0] : null
+  const firstBase = Array.isArray(attrs.baseNotes) ? attrs.baseNotes[0] : null
+  return [firstTop, firstHeart, firstBase].filter(Boolean).join(', ')
+}
+
 export default function ProductCard({ product, badge }) {
   const { addToCart, setQuickViewProduct } = useCart()
 
@@ -21,7 +33,7 @@ export default function ProductCard({ product, badge }) {
     setQuickViewProduct(product)
   }
 
-    const fieldDefs = CATEGORY_FIELDS[product.category] || []
+  const fieldDefs = CATEGORY_FIELDS[product.category] || []
   const hoverLines = HOVER_ATTRIBUTE_KEYS
     .map((key) => {
       const value = product.attributes?.[key]
@@ -58,7 +70,7 @@ export default function ProductCard({ product, badge }) {
           </div>
         </div>
         <h3>{product.name}</h3>
-        <p className="note">{product.note}</p>
+        <p className="note">{getDisplayNote(product)}</p>
       </Link>
       <div className="row">
         <span className="price">
