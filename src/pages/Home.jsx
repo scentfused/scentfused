@@ -48,7 +48,12 @@ export default function Home({ products, settings }) {
           </div>
          </section>
 
-        <PromoBanners banner1Image={settings.promoBanner1Image} banner2Image={settings.promoBanner2Image} />
+        <PromoBanners
+          banner1Image={settings.promoBanner1Image}
+          banner2Image={settings.promoBanner2Image}
+          banner1Font={settings.promoBanner1Font}
+          banner2Font={settings.promoBanner2Font}
+        />
       </main>
       <Footer />
     </div>
