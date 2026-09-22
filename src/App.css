@@ -451,7 +451,10 @@ footer{border-top:1px solid var(--hairline);padding:32px 0 20px;}
 
 .admin-stats{
   display:grid;grid-template-columns:repeat(6,1fr);gap:16px;margin-bottom:44px;
+  max-height:200px;opacity:1;overflow:hidden;
+  transition:max-height 0.3s ease, opacity 0.25s ease, margin-bottom 0.3s ease;
 }
+.admin-stats.closed{max-height:0;opacity:0;margin-bottom:0;}
 @media (max-width:960px){.admin-stats{grid-template-columns:repeat(3,1fr);}}
 @media (max-width:560px){.admin-stats{grid-template-columns:repeat(2,1fr);}}
 .stat-card{
