@@ -16,8 +16,13 @@ export default function Home({ products, settings }) {
     <div>
       <Nav />
       <main>
-      <Hero heroImage={settings.heroImage} />
-        <PromoBanners banner1Image={settings.promoBanner1Image} banner2Image={settings.promoBanner2Image} />
+            <Hero heroImage={settings.heroImage} />
+        <PromoBanners
+          banner1Image={settings.promoBanner1Image}
+          banner2Image={settings.promoBanner2Image}
+          banner1Font={settings.promoBanner1Font}
+          banner2Font={settings.promoBanner2Font}
+        />
         <Carousel
           products={latest}
           autoplay={settings.carouselAutoplay}
@@ -48,12 +53,6 @@ export default function Home({ products, settings }) {
           </div>
          </section>
 
-        <PromoBanners
-          banner1Image={settings.promoBanner1Image}
-          banner2Image={settings.promoBanner2Image}
-          banner1Font={settings.promoBanner1Font}
-          banner2Font={settings.promoBanner2Font}
-        />
       </main>
       <Footer />
     </div>
