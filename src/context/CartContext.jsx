@@ -23,7 +23,14 @@ export function CartProvider({ children }) {
 
   function addToCart(product, variant, qty = 1) {
     const variantLabel = variant ? variant.label : null
-    const price = variant ? variant.price : product.price
+    const basePrice = variant ? variant.price : product.price
+    // A variant's own sale price takes priority; falls back to the product's
+    // base sale price (kept in sync with the first variant) when adding
+    // without a specific variant. Only applies if it's actually cheaper.
+    const saleOverride = variant ? variant.salePrice : product.sale_price
+    const price = (saleOverride && Number(saleOverride) < Number(basePrice))
+      ? Number(saleOverride)
+      : Number(basePrice)
     const itemId = `${product.id}-${variantLabel || 'base'}`
 
     setItems((prev) => {
