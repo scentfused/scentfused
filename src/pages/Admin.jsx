@@ -270,8 +270,8 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
       changes.push({ label: 'Features', from: oldFeatures || '—', to: newFeatures || '—' })
     }
 
-    const oldVariants = (original.variants || []).map((v) => `${v.label}: Rs.${v.price}`).join(', ')
-    const newVariants = (payload.variants || []).map((v) => `${v.label}: Rs.${v.price}`).join(', ')
+    const oldVariants = (original.variants || []).map((v) => `${v.label}: Rs.${v.price}${v.salePrice ? ' (sale Rs.' + v.salePrice + ')' : ''}`).join(', ')
+    const newVariants = (payload.variants || []).map((v) => `${v.label}: Rs.${v.price}${v.salePrice ? ' (sale Rs.' + v.salePrice + ')' : ''}`).join(', ')
     if (oldVariants !== newVariants) {
       changes.push({ label: 'Variants', from: oldVariants || '—', to: newVariants || '—' })
     }
@@ -299,7 +299,11 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
 
     const cleanVariants = (draft.variants || [])
       .filter((v) => v.label.trim() && v.price !== '')
-      .map((v) => ({ label: v.label.trim(), price: Number(v.price) }))
+      .map((v) => ({
+        label: v.label.trim(),
+        price: Number(v.price),
+        salePrice: v.salePrice !== '' && v.salePrice != null ? Number(v.salePrice) : null
+      }))
 
     if (!draft.name.trim() || cleanVariants.length === 0) {
       setImageError('Add a name and at least one variant with a price before saving.')
@@ -318,7 +322,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
       category: draft.category,
       note: draft.note,
       price: cleanVariants[0].price,
-      sale_price: draft.salePrice ? Number(draft.salePrice) : null,
+      sale_price: cleanVariants[0].salePrice || null,
       sku: draft.sku || null,
       image: draft.image || null,
       images: (draft.images || []).filter((url) => url.trim()),
@@ -406,13 +410,16 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
       note: product.note,
       image: product.image || '',
       images: product.images || [],
-      variants: (product.variants || []).map((v) => ({ label: v.label, price: String(v.price) })),
+      variants: (product.variants || []).map((v) => ({
+        label: v.label,
+        price: String(v.price),
+        salePrice: v.salePrice != null ? String(v.salePrice) : ''
+      })),
       description: product.description || '',
       features: (product.features || []).join('\n'),
       usage: product.usage || '',
       attributes: normalizedAttributes,
-      sku: product.sku || '',
-      salePrice: product.sale_price ? String(product.sale_price) : ''
+      sku: product.sku || ''
     })
     setActiveSection('table')
     setTimeout(() => {
@@ -736,30 +743,18 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
             )
           })()}
 
-          <div className="admin-form-wide sku-sale-row">
-            <label>
-              SKU
-              <input
-                type="text"
-                value={draft.sku || ''}
-                onChange={(e) => setDraft({ ...draft, sku: e.target.value })}
-                placeholder="e.g. SF-PER-001"
-              />
-            </label>
-            <label>
-              Sale price (Rs.) — optional
-              <input
-                type="number"
-                min="0"
-                value={draft.salePrice || ''}
-                onChange={(e) => setDraft({ ...draft, salePrice: e.target.value })}
-                placeholder="Leave blank if not on sale"
-              />
-            </label>
-          </div>
+          <label className="admin-form-wide">
+            SKU
+            <input
+              type="text"
+              value={draft.sku || ''}
+              onChange={(e) => setDraft({ ...draft, sku: e.target.value })}
+              placeholder="e.g. SF-PER-001"
+            />
+          </label>
 
           <div className="admin-form-wide">
-            <span className="variants-label">Variants — size and price (at least one required)</span>
+            <span className="variants-label">Variants — size, price, and optional sale price (at least one required)</span>
             {(draft.variants || []).map((v, i) => (
               <div className="variant-row" key={i}>
                 <input
@@ -783,6 +778,17 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                     setDraft({ ...draft, variants: next })
                   }}
                 />
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="Sale price (optional)"
+                  value={v.salePrice || ''}
+                  onChange={(e) => {
+                    const next = [...draft.variants]
+                    next[i] = { ...next[i], salePrice: e.target.value }
+                    setDraft({ ...draft, variants: next })
+                  }}
+                />
                 <button
                   type="button"
                   className="variant-remove"
@@ -795,7 +801,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
             <button
               type="button"
               className="btn btn-line"
-              onClick={() => setDraft({ ...draft, variants: [...(draft.variants || []), { label: '', price: '' }] })}
+              onClick={() => setDraft({ ...draft, variants: [...(draft.variants || []), { label: '', price: '', salePrice: '' }] })}
             >
               + Add variant
             </button>
