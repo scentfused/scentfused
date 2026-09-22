@@ -8,6 +8,15 @@ import Footer from '../components/Footer.jsx'
 import Icon from '../components/Icon.jsx'
 import ProductCard from '../components/ProductCard.jsx'
 
+function getDisplayNote(product) {
+  if (product.note && product.note.trim()) return product.note
+  const attrs = product.attributes || {}
+  const firstTop = Array.isArray(attrs.topNotes) ? attrs.topNotes[0] : null
+  const firstHeart = Array.isArray(attrs.heartNotes) ? attrs.heartNotes[0] : null
+  const firstBase = Array.isArray(attrs.baseNotes) ? attrs.baseNotes[0] : null
+  return [firstTop, firstHeart, firstBase].filter(Boolean).join(', ')
+}
+
 export default function ProductPage({ products }) {
   const { id } = useParams()
   const { addToCart } = useCart()
@@ -45,8 +54,14 @@ export default function ProductPage({ products }) {
 
   const variants = product.variants || []
   const activeVariant = selectedVariant || variants[0] || null
-  const displayPrice = activeVariant ? activeVariant.price : product.price
-  const showSale = Boolean(product.sale_price) && displayPrice === product.price
+
+  // Each variant can have its own sale price now — fall back to the
+  // product-level values only when there's no variant at all.
+  const originalPrice = activeVariant ? activeVariant.price : product.price
+  const effectiveSalePrice = activeVariant ? activeVariant.salePrice : product.sale_price
+  const showSale = Boolean(effectiveSalePrice) && Number(effectiveSalePrice) < Number(originalPrice)
+  const displayPrice = showSale ? effectiveSalePrice : originalPrice
+
   const categoryLabel = CATEGORIES.find((c) => c.key === product.category)?.label
 
   const detailFields = (CATEGORY_FIELDS[product.category] || []).filter((field) => {
@@ -94,18 +109,16 @@ export default function ProductPage({ products }) {
           <h1>{product.name}</h1>
           <p className="product-page-price">
             {showSale ? (
-              <>
               <span className="price-stack">
-                <span className="price-was">Rs. {Number(displayPrice).toLocaleString()}</span>
-                <span className="price-sale">Rs. {Number(product.sale_price).toLocaleString()}</span>
+                <span className="price-was">Rs. {Number(originalPrice).toLocaleString()}</span>
+                <span className="price-sale">Rs. {Number(displayPrice).toLocaleString()}</span>
               </span>
-              </>
             ) : (
               <>Rs. {Number(displayPrice).toLocaleString()}</>
             )}
           </p>
 
-          {product.note && <p className="product-page-tagline">{product.note}</p>}
+          {product.note && <p className="product-page-tagline">{getDisplayNote(product)}</p>}
 
           {product.description && (
             <p className="product-page-description">{product.description}</p>
