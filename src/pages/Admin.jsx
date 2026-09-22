@@ -8,6 +8,17 @@ import { uploadImageToCloudinary } from '../lib/cloudinary.js'
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5MB, Cloudinary handles storage/optimization now
 
+// Falls back to the first Top/Heart/Base note when the short "Note" blurb
+// was never filled in — same fallback used on the public storefront.
+function getDisplayNote(product) {
+  if (product.note && product.note.trim()) return product.note
+  const attrs = product.attributes || {}
+  const firstTop = Array.isArray(attrs.topNotes) ? attrs.topNotes[0] : null
+  const firstHeart = Array.isArray(attrs.heartNotes) ? attrs.heartNotes[0] : null
+  const firstBase = Array.isArray(attrs.baseNotes) ? attrs.baseNotes[0] : null
+  return [firstTop, firstHeart, firstBase].filter(Boolean).join(', ')
+}
+
 // Formats a database timestamp for the admin product table only — never
 // shown anywhere on the public storefront.
 function formatTimestamp(value) {
@@ -1459,7 +1470,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                           </td>
                           <td>{p.name}</td>
                           <td>{CATEGORIES.find((c) => c.key === p.category)?.label}</td>
-                          <td className="muted">{p.note}</td>
+                          <td className="muted">{getDisplayNote(p)}</td>
                           <td>Rs. {Number(p.price).toLocaleString()}</td>
                           <td className="muted admin-timestamp">{formatTimestamp(p.created_at)}</td>
                           <td className="muted admin-timestamp">{formatTimestamp(p.updated_at)}</td>
