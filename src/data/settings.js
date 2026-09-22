@@ -32,5 +32,7 @@ export const defaultSettings = {
   heroImage: '',
   carouselProductIds: [],
   promoBanner1Image: '',
-  promoBanner2Image: ''
+  promoBanner2Image: '',
+  promoBanner1Font: 'Robot Monster',
+  promoBanner2Font: 'Robot Monster'
 }
