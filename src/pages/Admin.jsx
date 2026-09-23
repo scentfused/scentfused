@@ -994,23 +994,6 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
       </header>
 
       <div className="wrap admin-wrap">
-        <section className={`admin-stats ${sidebarOpen ? 'open' : 'closed'}`}>
-          <div className="stat-card">
-            <span className="stat-label">Total products</span>
-            <span className="stat-value">{stats.total}</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-label">Catalog value</span>
-            <span className="stat-value">Rs. {stats.value.toLocaleString()}</span>
-          </div>
-          {stats.byCategory.map((c) => (
-            <div className="stat-card" key={c.key}>
-              <span className="stat-label">{c.label}</span>
-              <span className="stat-value">{c.count}</span>
-            </div>
-          ))}
-        </section>
-
         <div className="admin-layout">
           <aside className={`admin-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
             <nav>
@@ -1028,6 +1011,22 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
           </aside>
 
           <main className="admin-main">
+            <section className="admin-stats">
+              <div className="stat-card">
+                <span className="stat-label">Total products</span>
+                <span className="stat-value">{stats.total}</span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-label">Catalog value</span>
+                <span className="stat-value">Rs. {stats.value.toLocaleString()}</span>
+              </div>
+              {stats.byCategory.map((c) => (
+                <div className="stat-card" key={c.key}>
+                  <span className="stat-label">{c.label}</span>
+                  <span className="stat-value">{c.count}</span>
+                </div>
+              ))}
+            </section>
             {/* ---------- Site settings ---------- */}
             {activeSection === 'settings' && (
               <section className="admin-panel">
