@@ -451,10 +451,7 @@ footer{border-top:1px solid var(--hairline);padding:32px 0 20px;}
 
 .admin-stats{
   display:grid;grid-template-columns:repeat(6,1fr);gap:16px;margin-bottom:44px;
-  max-height:200px;opacity:1;overflow:hidden;
-  transition:max-height 0.3s ease, opacity 0.25s ease, margin-bottom 0.3s ease;
 }
-.admin-stats.closed{max-height:0;opacity:0;margin-bottom:0;}
 @media (max-width:960px){.admin-stats{grid-template-columns:repeat(3,1fr);}}
 @media (max-width:560px){.admin-stats{grid-template-columns:repeat(2,1fr);}}
 .stat-card{
@@ -828,7 +825,7 @@ footer{border-top:1px solid var(--hairline);padding:32px 0 20px;}
   .whatsapp-float{width:50px;height:50px;}
 }
 /* ---------- Admin: sidebar layout ---------- */
-.admin-layout{display:flex;gap:24px;align-items:flex-start;width:100%;box-sizing:border-box;}
+.admin-layout{display:flex;gap:24px;align-items:stretch;width:100%;box-sizing:border-box;}
 .admin-sidebar{
   width:240px;flex-shrink:0;border:1px solid var(--hairline);background:#0a0a0a;
   position:sticky;top:24px;overflow:hidden;
