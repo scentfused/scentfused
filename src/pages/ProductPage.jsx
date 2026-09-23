@@ -58,7 +58,12 @@ export default function ProductPage({ products }) {
   // Each variant can have its own sale price now — fall back to the
   // product-level values only when there's no variant at all.
   const originalPrice = activeVariant ? activeVariant.price : product.price
-  const effectiveSalePrice = activeVariant ? activeVariant.salePrice : product.sale_price
+  // Prefer the variant's own sale price; fall back to the product-level one
+  // only when this variant's price matches the product's base price.
+  let effectiveSalePrice = activeVariant ? activeVariant.salePrice : product.sale_price
+  if (!effectiveSalePrice && product.sale_price && Number(originalPrice) === Number(product.price)) {
+    effectiveSalePrice = product.sale_price
+  }
   const showSale = Boolean(effectiveSalePrice) && Number(effectiveSalePrice) < Number(originalPrice)
   const displayPrice = showSale ? effectiveSalePrice : originalPrice
 
