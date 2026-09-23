@@ -27,7 +27,15 @@ export function CartProvider({ children }) {
     // A variant's own sale price takes priority; falls back to the product's
     // base sale price (kept in sync with the first variant) when adding
     // without a specific variant. Only applies if it's actually cheaper.
-    const saleOverride = variant ? variant.salePrice : product.sale_price
+    // Prefer the variant's own sale price. If it's not set (an older product
+    // never re-saved through the newer per-variant form, for example), fall
+    // back to the product-level sale price — but only when this variant's
+    // regular price matches the product's base price, so it doesn't wrongly
+    // apply a base-variant discount to a differently-priced size.
+    let saleOverride = variant ? variant.salePrice : product.sale_price
+    if (!saleOverride && product.sale_price && Number(basePrice) === Number(product.price)) {
+      saleOverride = product.sale_price
+    }
     const price = (saleOverride && Number(saleOverride) < Number(basePrice))
       ? Number(saleOverride)
       : Number(basePrice)
