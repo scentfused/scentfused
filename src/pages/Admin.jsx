@@ -177,7 +177,7 @@ Lighting: dramatic low-key lighting, warm golden rim light on the bottle, glossy
 
     return `Create a luxury perfume advertisement infographic in a 4:5 format. Ultra-realistic, cinematic product photography. Opulent, magical, regal mood.
 
-LEFT SIDE (hero scene): perfume bottle [uploaded image]
+LEFT SIDE (hero scene): perfume bottle [uploaded image], and dont change the bottle viewing angle it should be flat showing only the front side
 
 Background: pitch black background
 
