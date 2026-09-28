@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext.jsx'
 import { CATEGORY_FIELDS } from '../data/categoryFields.js'
@@ -29,14 +29,30 @@ export default function ProductPage({ products }) {
   const galleryImages = product
     ? [product.image, ...(product.images || [])].filter(Boolean)
     : []
-  const [selectedImage, setSelectedImage] = useState(galleryImages[0] || '')
+  const sliderRef = useRef(null)
+  const [activeIndex, setActiveIndex] = useState(0)
 
-  // Reset the selected image whenever navigating to a different product —
+  // Reset to the first image whenever navigating to a different product —
   // React Router keeps this same component mounted across /product/:id changes.
   useEffect(() => {
-    setSelectedImage(galleryImages[0] || '')
+    setActiveIndex(0)
+    if (sliderRef.current) sliderRef.current.scrollTo({ left: 0 })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product?.id])
+
+  function handleSliderScroll() {
+    const el = sliderRef.current
+    if (!el) return
+    const index = Math.round(el.scrollLeft / el.clientWidth)
+    setActiveIndex(index)
+  }
+
+  function scrollToImage(index) {
+    const el = sliderRef.current
+    if (!el) return
+    el.scrollTo({ left: index * el.clientWidth, behavior: 'smooth' })
+    setActiveIndex(index)
+  }
 
   if (!product) {
     return (
@@ -91,20 +107,29 @@ export default function ProductPage({ products }) {
       <div className="product-page">
         <div className="product-page-image-col">
           <div className="product-page-image">
-            {selectedImage ? <img src={selectedImage} alt={product.name} /> : <Icon category={product.category} />}
+            {galleryImages.length > 0 ? (
+              <div className="product-page-slider" ref={sliderRef} onScroll={handleSliderScroll}>
+                {galleryImages.map((img, i) => (
+                  <div className="product-page-slide" key={i}>
+                    <img src={img} alt={`${product.name} ${i + 1}`} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Icon category={product.category} />
+            )}
           </div>
 
           {galleryImages.length > 1 && (
-            <div className="product-page-thumbs">
-              {galleryImages.map((img, i) => (
+            <div className="product-page-dots">
+              {galleryImages.map((_, i) => (
                 <button
                   key={i}
                   type="button"
-                  className={`product-page-thumb ${selectedImage === img ? 'active' : ''}`}
-                  onClick={() => setSelectedImage(img)}
-                >
-                  <img src={img} alt={`${product.name} ${i + 1}`} />
-                </button>
+                  aria-label={`Show image ${i + 1}`}
+                  className={`product-page-dot ${activeIndex === i ? 'active' : ''}`}
+                  onClick={() => scrollToImage(i)}
+                />
               ))}
             </div>
           )}
