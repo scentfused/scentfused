@@ -177,7 +177,7 @@ Lighting: dramatic low-key lighting, warm golden rim light on the bottle, glossy
 
     return `Create a luxury perfume advertisement infographic in a 4:5 format. Ultra-realistic, cinematic product photography. Opulent, magical, regal mood.
 
-LEFT SIDE (hero scene): perfume bottle [uploaded image], and dont change the bottle viewing angle it should be flat showing only the front side
+LEFT SIDE (hero scene): perfume bottle [uploaded image]
 
 Background: pitch black background
 
@@ -301,6 +301,18 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
     const newVariants = (payload.variants || []).map((v) => `${v.label}: Rs.${v.price}${v.salePrice ? ' (sale Rs.' + v.salePrice + ')' : ''}`).join(', ')
     if (oldVariants !== newVariants) {
       changes.push({ label: 'Variants', from: oldVariants || '—', to: newVariants || '—' })
+    }
+
+    const oldImages = (original.images || []).join('|')
+    const newImages = (payload.images || []).join('|')
+    if (oldImages !== newImages) {
+      const oldCount = (original.images || []).length
+      const newCount = (payload.images || []).length
+      changes.push({
+        label: 'Additional images',
+        from: `${oldCount} image${oldCount === 1 ? '' : 's'}`,
+        to: `${newCount} image${newCount === 1 ? '' : 's'}`
+      })
     }
 
     const allAttrKeys = new Set([
@@ -437,11 +449,17 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
       note: product.note,
       image: product.image || '',
       images: product.images || [],
-      variants: (product.variants || []).map((v) => ({
-        label: v.label,
-        price: String(v.price),
-        salePrice: v.salePrice != null ? String(v.salePrice) : ''
-      })),
+      variants: (product.variants || []).map((v) => {
+        let salePrice = v.salePrice != null ? String(v.salePrice) : ''
+        // Older products only ever had a single product-level sale price,
+        // never copied onto the variant itself. Show that here so editing
+        // doesn't look like the sale price vanished — and saving now will
+        // properly persist it onto this variant going forward.
+        if (!salePrice && product.sale_price && Number(v.price) === Number(product.price)) {
+          salePrice = String(product.sale_price)
+        }
+        return { label: v.label, price: String(v.price), salePrice }
+      }),
       description: product.description || '',
       features: (product.features || []).join('\n'),
       usage: product.usage || '',
