@@ -18,13 +18,15 @@ function getDisplayNote(product) {
 }
 
 export default function ProductCard({ product, badge }) {
-  const { addToCart, setQuickViewProduct } = useCart()
+  const { setQuickViewProduct } = useCart()
 
   function handleAdd(e) {
     e.preventDefault()
     e.stopPropagation()
-    const variants = product.variants || []
-    addToCart(product, variants[0] || null, 1)
+    // Instead of silently adding a default variant, open the same popup
+    // used for "Quick view" so the person can confirm which size/variant
+    // they actually want before it's added to the cart.
+    setQuickViewProduct(product)
   }
 
   function handleQuickView(e) {
