@@ -14,6 +14,7 @@ import { CATEGORIES } from './data/catalog.js'
 import { defaultSettings } from './data/settings.js'
 import { shade } from './utils/color.js'
 import { supabase, isSupabaseConfigured } from './lib/supabaseClient.js'
+import { useCart } from './context/CartContext.jsx'
 
 export default function App() {
   const [products, setProducts] = useState([])
@@ -21,6 +22,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const location = useLocation()
+  const { syncCartPrices } = useCart()
 
     useEffect(() => {
     if (location.hash) {
@@ -90,6 +92,12 @@ export default function App() {
     load()
     return () => { cancelled = true }
   }, [])
+
+  // Once live products are loaded, re-check anything already in the cart so
+  // prices saved earlier (e.g. before a sale was set) match current pricing.
+  useEffect(() => {
+    if (products.length > 0) syncCartPrices(products)
+  }, [products, syncCartPrices])
 
   // Derive the bright/dim accent shades from the single chosen accent color,
   // and expose the brand font as a CSS variable, so both apply live site-wide.
