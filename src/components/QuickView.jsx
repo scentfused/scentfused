@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useCart } from '../context/CartContext.jsx'
 import Icon from './Icon.jsx'
+import { firstAvailableVariant } from '../utils/stock.js'
 
 function getDisplayNote(product) {
   if (product.note && product.note.trim()) return product.note
@@ -20,7 +21,9 @@ export default function QuickView() {
 
   const product = quickViewProduct
   const variants = product.variants || []
-  const activeVariant = selectedVariant || variants[0] || null
+  // Pre-select the first size that's still in stock.
+  const activeVariant = selectedVariant || firstAvailableVariant(product)
+  const activeSoldOut = Boolean(activeVariant && activeVariant.soldOut)
 
   // Each variant can have its own sale price now — fall back to the
   // product-level values only when there's no variant at all.
@@ -41,6 +44,7 @@ export default function QuickView() {
   }
 
   function handleAdd() {
+    if (activeSoldOut) return
     addToCart(product, activeVariant, qty)
     close()
   }
@@ -76,7 +80,9 @@ export default function QuickView() {
                   <button
                     key={v.label}
                     type="button"
-                    className={`variant-chip ${activeVariant?.label === v.label ? 'active' : ''}`}
+                    disabled={Boolean(v.soldOut)}
+                    title={v.soldOut ? 'Sold out' : undefined}
+                    className={`variant-chip ${activeVariant?.label === v.label ? 'active' : ''} ${v.soldOut ? 'sold-out' : ''}`}
                     onClick={() => setSelectedVariant(v)}
                   >
                     {v.label}
@@ -86,13 +92,19 @@ export default function QuickView() {
             </div>
           )}
 
-          <div className="quickview-qty">
-            <button onClick={() => setQty((q) => Math.max(1, q - 1))}>&minus;</button>
-            <span>{qty}</span>
-            <button onClick={() => setQty((q) => q + 1)}>+</button>
-          </div>
+          {activeSoldOut ? (
+            <p className="soldout-note">This item is currently sold out.</p>
+          ) : (
+            <div className="quickview-qty">
+              <button onClick={() => setQty((q) => Math.max(1, q - 1))}>&minus;</button>
+              <span>{qty}</span>
+              <button onClick={() => setQty((q) => q + 1)}>+</button>
+            </div>
+          )}
 
-          <button className="btn btn-solid quickview-add" onClick={handleAdd}>Add to bag</button>
+          <button className="btn btn-solid quickview-add" onClick={handleAdd} disabled={activeSoldOut}>
+            {activeSoldOut ? 'Sold out' : 'Add to bag'}
+          </button>
         </div>
       </div>
     </div>
