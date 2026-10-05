@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 
 const CartContext = createContext(null)
 const STORAGE_KEY = 'scentfused-cart'
@@ -12,6 +12,22 @@ function loadCart() {
   }
 }
 
+// Works out what a customer should actually pay for a product + variant.
+// Prefers the variant's own sale price; if it has none (older products never
+// re-saved through the per-variant form), falls back to the product-level
+// sale price, but only when this variant is the base-priced one so a
+// discount meant for one size isn't applied to a differently-priced size.
+function computePrice(product, variant) {
+  const basePrice = variant ? variant.price : product.price
+  let saleOverride = variant ? variant.salePrice : product.sale_price
+  if (!saleOverride && product.sale_price && Number(basePrice) === Number(product.price)) {
+    saleOverride = product.sale_price
+  }
+  return (saleOverride && Number(saleOverride) < Number(basePrice))
+    ? Number(saleOverride)
+    : Number(basePrice)
+}
+
 export function CartProvider({ children }) {
   const [items, setItems] = useState(loadCart)
   const [isCartOpen, setIsCartOpen] = useState(false)
@@ -22,29 +38,18 @@ export function CartProvider({ children }) {
   }, [items])
 
   function addToCart(product, variant, qty = 1) {
+    // A sold-out size can't be added, even if something tries to.
+    if (variant && variant.soldOut) return
     const variantLabel = variant ? variant.label : null
-    const basePrice = variant ? variant.price : product.price
-    // A variant's own sale price takes priority; falls back to the product's
-    // base sale price (kept in sync with the first variant) when adding
-    // without a specific variant. Only applies if it's actually cheaper.
-    // Prefer the variant's own sale price. If it's not set (an older product
-    // never re-saved through the newer per-variant form, for example), fall
-    // back to the product-level sale price — but only when this variant's
-    // regular price matches the product's base price, so it doesn't wrongly
-    // apply a base-variant discount to a differently-priced size.
-    let saleOverride = variant ? variant.salePrice : product.sale_price
-    if (!saleOverride && product.sale_price && Number(basePrice) === Number(product.price)) {
-      saleOverride = product.sale_price
-    }
-    const price = (saleOverride && Number(saleOverride) < Number(basePrice))
-      ? Number(saleOverride)
-      : Number(basePrice)
+    const price = computePrice(product, variant)
     const itemId = `${product.id}-${variantLabel || 'base'}`
 
     setItems((prev) => {
       const existing = prev.find((i) => i.itemId === itemId)
       if (existing) {
-        return prev.map((i) => (i.itemId === itemId ? { ...i, qty: i.qty + qty } : i))
+        // Refresh the price as well, so an item added earlier at an old
+        // (pre-sale) price doesn't keep that price when added again.
+        return prev.map((i) => (i.itemId === itemId ? { ...i, qty: i.qty + qty, price } : i))
       }
       return [
         ...prev,
@@ -74,8 +79,42 @@ export function CartProvider({ children }) {
     )
   }
 
+  // Re-checks every item already sitting in the cart against the live
+  // product data, so prices saved on someone's phone earlier (before a sale
+  // was set, or before a fix) correct themselves automatically.
+  const syncCartPrices = useCallback((products) => {
+    setItems((prev) => {
+      let changed = false
+      const next = prev.map((item) => {
+        const product = products.find((p) => p.id === item.productId)
+        let variant = null
+        let unavailable = false
+
+        if (!product) {
+          unavailable = true
+        } else if (item.variantLabel) {
+          variant = (product.variants || []).find((v) => v.label === item.variantLabel) || null
+          if (!variant) unavailable = true
+        }
+        if (variant && variant.soldOut) unavailable = true
+
+        // Keep the last known price when the product/size is gone entirely.
+        const price = product && (!item.variantLabel || variant)
+          ? computePrice(product, variant)
+          : item.price
+
+        if (price !== item.price || Boolean(item.soldOut) !== unavailable) {
+          changed = true
+          return { ...item, price, soldOut: unavailable }
+        }
+        return item
+      })
+      return changed ? next : prev
+    })
+  }, [])
+
   const cartCount = items.reduce((sum, i) => sum + i.qty, 0)
-  const cartTotal = items.reduce((sum, i) => sum + i.qty * i.price, 0)
+  const cartTotal = items.reduce((sum, i) => (i.soldOut ? sum : sum + i.qty * i.price), 0)
 
   return (
     <CartContext.Provider
@@ -84,6 +123,7 @@ export function CartProvider({ children }) {
         addToCart,
         removeFromCart,
         updateQty,
+        syncCartPrices,
         cartCount,
         cartTotal,
         isCartOpen,
