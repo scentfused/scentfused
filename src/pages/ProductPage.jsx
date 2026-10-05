@@ -7,6 +7,7 @@ import Nav from '../components/Nav.jsx'
 import Footer from '../components/Footer.jsx'
 import Icon from '../components/Icon.jsx'
 import ProductCard from '../components/ProductCard.jsx'
+import { firstAvailableVariant } from '../utils/stock.js'
 
 function getDisplayNote(product) {
   if (product.note && product.note.trim()) return product.note
@@ -69,7 +70,9 @@ export default function ProductPage({ products }) {
   }
 
   const variants = product.variants || []
-  const activeVariant = selectedVariant || variants[0] || null
+  // Pre-select the first size that's still in stock.
+  const activeVariant = selectedVariant || firstAvailableVariant(product)
+  const activeSoldOut = Boolean(activeVariant && activeVariant.soldOut)
 
   // Each variant can have its own sale price now — fall back to the
   // product-level values only when there's no variant at all.
@@ -95,6 +98,7 @@ export default function ProductPage({ products }) {
     .slice(0, 4)
 
   function handleAdd() {
+    if (activeSoldOut) return
     addToCart(product, activeVariant, qty)
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
@@ -195,7 +199,9 @@ export default function ProductPage({ products }) {
                   <button
                     key={v.label}
                     type="button"
-                    className={`variant-chip ${activeVariant?.label === v.label ? 'active' : ''}`}
+                    disabled={Boolean(v.soldOut)}
+                    title={v.soldOut ? 'Sold out' : undefined}
+                    className={`variant-chip ${activeVariant?.label === v.label ? 'active' : ''} ${v.soldOut ? 'sold-out' : ''}`}
                     onClick={() => setSelectedVariant(v)}
                   >
                     {v.label}
@@ -204,18 +210,22 @@ export default function ProductPage({ products }) {
               </div>
             </div>
           ) : variants.length === 1 ? (
-            <p className="product-page-meta-line"><strong>Size:</strong> {variants[0].label}</p>
+            <p className="product-page-meta-line"><strong>Size:</strong> {variants[0].label}{variants[0].soldOut ? ' (sold out)' : ''}</p>
           ) : null}
 
-          <div className="product-page-buy-row">
-            <div className="quickview-qty">
-              <button onClick={() => setQty((q) => Math.max(1, q - 1))}>&minus;</button>
-              <span>{qty}</span>
-              <button onClick={() => setQty((q) => q + 1)}>+</button>
-            </div>
+          {activeSoldOut && <p className="soldout-note">This item is currently sold out.</p>}
 
-            <button className="btn btn-solid product-page-add" onClick={handleAdd}>
-              {added ? 'Added ✓' : 'Add to bag'}
+          <div className="product-page-buy-row">
+            {!activeSoldOut && (
+              <div className="quickview-qty">
+                <button onClick={() => setQty((q) => Math.max(1, q - 1))}>&minus;</button>
+                <span>{qty}</span>
+                <button onClick={() => setQty((q) => q + 1)}>+</button>
+              </div>
+            )}
+
+            <button className="btn btn-solid product-page-add" onClick={handleAdd} disabled={activeSoldOut}>
+              {activeSoldOut ? 'Sold out' : added ? 'Added ✓' : 'Add to bag'}
             </button>
           </div>
         </div>
