@@ -5,6 +5,9 @@ import { FONT_OPTIONS } from '../data/settings.js'
 import { CATEGORY_FIELDS } from '../data/categoryFields.js'
 import { supabase } from '../lib/supabaseClient.js'
 import { uploadImageToCloudinary } from '../lib/cloudinary.js'
+import { isProductSoldOut, hasSoldOutSize } from '../utils/stock.js'
+import { useStaff } from '../context/StaffContext.jsx'
+import ActivityLog from '../components/ActivityLog.jsx'
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5MB, Cloudinary handles storage/optimization now
 
@@ -35,6 +38,10 @@ function formatTimestamp(value) {
 }
 
 export default function Admin({ products, setProducts, settings, setSettings }) {
+  // Who is logged in. Site Settings and the Activity log are administrator-only.
+  const staff = useStaff()
+  const isAdmin = Boolean(staff && staff.isAdmin)
+
   const [draft, setDraft] = useState(emptyDraft())
   const [tagInputs, setTagInputs] = useState({})
 
@@ -297,8 +304,8 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
       changes.push({ label: 'Features', from: oldFeatures || '—', to: newFeatures || '—' })
     }
 
-    const oldVariants = (original.variants || []).map((v) => `${v.label}: Rs.${v.price}${v.salePrice ? ' (sale Rs.' + v.salePrice + ')' : ''}`).join(', ')
-    const newVariants = (payload.variants || []).map((v) => `${v.label}: Rs.${v.price}${v.salePrice ? ' (sale Rs.' + v.salePrice + ')' : ''}`).join(', ')
+    const oldVariants = (original.variants || []).map((v) => `${v.label}: Rs.${v.price}${v.salePrice ? ' (sale Rs.' + v.salePrice + ')' : ''}${v.soldOut ? ' [SOLD OUT]' : ''}`).join(', ')
+    const newVariants = (payload.variants || []).map((v) => `${v.label}: Rs.${v.price}${v.salePrice ? ' (sale Rs.' + v.salePrice + ')' : ''}${v.soldOut ? ' [SOLD OUT]' : ''}`).join(', ')
     if (oldVariants !== newVariants) {
       changes.push({ label: 'Variants', from: oldVariants || '—', to: newVariants || '—' })
     }
@@ -341,7 +348,8 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
       .map((v) => ({
         label: v.label.trim(),
         price: Number(v.price),
-        salePrice: v.salePrice !== '' && v.salePrice != null ? Number(v.salePrice) : null
+        salePrice: v.salePrice !== '' && v.salePrice != null ? Number(v.salePrice) : null,
+        soldOut: Boolean(v.soldOut)
       }))
 
     if (!draft.name.trim() || cleanVariants.length === 0) {
@@ -458,7 +466,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
         if (!salePrice && product.sale_price && Number(v.price) === Number(product.price)) {
           salePrice = String(product.sale_price)
         }
-        return { label: v.label, price: String(v.price), salePrice }
+        return { label: v.label, price: String(v.price), salePrice, soldOut: Boolean(v.soldOut) }
       }),
       description: product.description || '',
       features: (product.features || []).join('\n'),
@@ -473,15 +481,21 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
   }
 
   async function handleDelete(id) {
+    const target = products.find((p) => p.id === id)
+    if (!window.confirm(`Delete "${target ? target.name : 'this product'}"? This can't be undone.`)) return
+
     if (editingId === id) resetForm()
 
     const previous = products
     setProducts((prev) => prev.filter((p) => p.id !== id)) // optimistic UI update
 
-    const { error } = await supabase.from('products').delete().eq('id', id)
-    if (error) {
+    // .select() makes the database report which rows it actually deleted, so a
+    // delete that was silently refused (no permission) is caught too.
+    const { data, error } = await supabase.from('products').delete().eq('id', id).select()
+    if (error || !data || data.length === 0) {
       console.error('Failed to delete product:', error)
       setProducts(previous) // roll back if the delete didn't actually happen
+      window.alert('That product could not be deleted. You may not have permission, or you may need to log in again.')
     }
   }
 
@@ -834,6 +848,18 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                     setDraft({ ...draft, variants: next })
                   }}
                 />
+                <label className="variant-soldout">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(v.soldOut)}
+                    onChange={(e) => {
+                      const next = [...draft.variants]
+                      next[i] = { ...next[i], soldOut: e.target.checked }
+                      setDraft({ ...draft, variants: next })
+                    }}
+                  />
+                  Sold out
+                </label>
                 <button
                   type="button"
                   className="variant-remove"
@@ -846,7 +872,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
             <button
               type="button"
               className="btn btn-line"
-              onClick={() => setDraft({ ...draft, variants: [...(draft.variants || []), { label: '', price: '', salePrice: '' }] })}
+              onClick={() => setDraft({ ...draft, variants: [...(draft.variants || []), { label: '', price: '', salePrice: '', soldOut: false }] })}
             >
               + Add variant
             </button>
@@ -985,14 +1011,16 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
     )
   }
 
-  const NAV_ITEMS = [
-    { key: 'settings', label: 'Site Settings' },
+  const ALL_NAV_ITEMS = [
+    { key: 'settings', label: 'Site Settings', adminOnly: true },
     { key: 'ai', label: 'AI Image Generation' },
     { key: 'royalInfographic', label: 'AI Regal Infographic Prompt' },
     { key: 'adInfographic', label: 'AI Ad Infographic Prompt' },
     { key: 'product', label: 'Add a Product' },
-    { key: 'table', label: 'Products' }
+    { key: 'table', label: 'Products' },
+    { key: 'activity', label: 'Activity Log', adminOnly: true }
   ]
+  const NAV_ITEMS = ALL_NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin)
 
   return (
     <div className="admin">
@@ -1008,7 +1036,18 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
           </button>
           <span className="brand">scentfused <em>admin</em></span>
         </div>
-        <Link className="admin-btn" to="/">View site</Link>
+        <div className="admin-topbar-right">
+          {staff && (
+            <span className="admin-user-chip">
+              {staff.name}
+              <em>{isAdmin ? 'Site administrator' : 'Editor'}</em>
+            </span>
+          )}
+          <Link className="admin-btn" to="/">View site</Link>
+          <button type="button" className="admin-btn" onClick={() => supabase.auth.signOut()}>
+            Log out
+          </button>
+        </div>
       </header>
 
       <div className="wrap admin-wrap">
@@ -1046,7 +1085,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
               ))}
             </section>
             {/* ---------- Site settings ---------- */}
-            {activeSection === 'settings' && (
+            {activeSection === 'settings' && isAdmin && (
               <section className="admin-panel">
                 <h2 className="admin-panel-title">Site settings</h2>
                 <div className="settings-grid">
@@ -1496,12 +1535,24 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                                 : <span className="admin-thumb-empty">—</span>}
                             </div>
                           </td>
-                          <td>{p.name}</td>
+                          <td>
+                            {p.name}
+                            {isProductSoldOut(p) && <span className="admin-soldout-tag">Sold out</span>}
+                            {!isProductSoldOut(p) && hasSoldOutSize(p) && (
+                              <span className="admin-soldout-tag partial">Some sizes out</span>
+                            )}
+                          </td>
                           <td>{CATEGORIES.find((c) => c.key === p.category)?.label}</td>
                           <td className="muted">{getDisplayNote(p)}</td>
                           <td>Rs. {Number(p.price).toLocaleString()}</td>
-                          <td className="muted admin-timestamp">{formatTimestamp(p.created_at)}</td>
-                          <td className="muted admin-timestamp">{formatTimestamp(p.updated_at)}</td>
+                          <td className="muted admin-timestamp">
+                            {formatTimestamp(p.created_at)}
+                            {p.created_by_name && <span className="admin-by">by {p.created_by_name}</span>}
+                          </td>
+                          <td className="muted admin-timestamp">
+                            {formatTimestamp(p.updated_at)}
+                            {p.updated_by_name && <span className="admin-by">by {p.updated_by_name}</span>}
+                          </td>
                           <td className="admin-row-actions">
                             <button onClick={() => (editingId === p.id ? resetForm() : handleEdit(p))}>
                               {editingId === p.id ? 'Close' : 'Edit'}
@@ -1526,6 +1577,14 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                   </tbody>
                 </table>
                 </div>
+              </section>
+            )}
+
+            {/* ---------- Activity log (administrator only) ---------- */}
+            {activeSection === 'activity' && isAdmin && (
+              <section className="admin-panel">
+                <h2 className="admin-panel-title">Activity log</h2>
+                <ActivityLog />
               </section>
             )}
           </main>
