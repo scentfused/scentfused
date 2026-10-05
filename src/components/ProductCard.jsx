@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext.jsx'
 import { CATEGORY_FIELDS } from '../data/categoryFields.js'
 import Icon from './Icon.jsx'
+import { isProductSoldOut } from '../utils/stock.js'
 
 const HOVER_ATTRIBUTE_KEYS = ['topNotes', 'heartNotes', 'baseNotes', 'concentration']
 
@@ -35,6 +36,7 @@ export default function ProductCard({ product, badge }) {
     setQuickViewProduct(product)
   }
 
+  const soldOut = isProductSoldOut(product)
   const fieldDefs = CATEGORY_FIELDS[product.category] || []
   const hoverLines = HOVER_ATTRIBUTE_KEYS
     .map((key) => {
@@ -51,7 +53,9 @@ export default function ProductCard({ product, badge }) {
 
   return (
     <div className="card">
-      {badge && <span className="badge">{badge}</span>}
+      {soldOut
+        ? <span className="badge badge-soldout">Sold out</span>
+        : badge && <span className="badge">{badge}</span>}
       <Link to={`/product/${product.id}`} className="card-link">
         <div className="tile">
           {product.image
@@ -85,7 +89,9 @@ export default function ProductCard({ product, badge }) {
             <>Rs. {Number(product.price).toLocaleString()}</>
           )}
         </span>
-        <button className="add" onClick={handleAdd}>Add</button>
+        <button className="add" onClick={handleAdd} disabled={soldOut}>
+          {soldOut ? 'Sold out' : 'Add'}
+        </button>
       </div>
     </div>
   )
