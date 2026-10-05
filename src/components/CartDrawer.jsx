@@ -19,21 +19,25 @@ export default function CartDrawer() {
           <>
             <div className="cart-items">
               {items.map((item) => (
-                <div className="cart-item" key={item.itemId}>
+                <div className={`cart-item ${item.soldOut ? 'unavailable' : ''}`} key={item.itemId}>
                   <div className="cart-item-thumb">
                     {item.image ? <img src={item.image} alt={item.name} /> : null}
                   </div>
                   <div className="cart-item-info">
                     <h4>{item.name}</h4>
                     {item.variantLabel && <p className="cart-item-variant">{item.variantLabel}</p>}
-                    <div className="cart-item-qty">
-                      <button onClick={() => updateQty(item.itemId, -1)}>&minus;</button>
-                      <span>{item.qty}</span>
-                      <button onClick={() => updateQty(item.itemId, 1)}>+</button>
-                    </div>
+                    {item.soldOut ? (
+                      <p className="cart-item-unavailable">No longer available. Please remove it.</p>
+                    ) : (
+                      <div className="cart-item-qty">
+                        <button onClick={() => updateQty(item.itemId, -1)}>&minus;</button>
+                        <span>{item.qty}</span>
+                        <button onClick={() => updateQty(item.itemId, 1)}>+</button>
+                      </div>
+                    )}
                   </div>
                   <div className="cart-item-right">
-                    <span className="cart-item-price">Rs. {(item.price * item.qty).toLocaleString()}</span>
+                    <span className="cart-item-price">{item.soldOut ? 'Sold out' : `Rs. ${(item.price * item.qty).toLocaleString()}`}</span>
                     <button className="cart-item-remove" onClick={() => removeFromCart(item.itemId)}>Remove</button>
                   </div>
                 </div>
