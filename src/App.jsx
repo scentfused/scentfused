@@ -13,7 +13,7 @@ import QuickView from './components/QuickView.jsx'
 import { CATEGORIES } from './data/catalog.js'
 import { defaultSettings } from './data/settings.js'
 import { shade } from './utils/color.js'
-import { buildTypographyCss, TYPOGRAPHY_KEYS } from './utils/typography.js'
+import { buildTypographyCss, rowToSettings, settingsToRow, TYPOGRAPHY_KEYS } from './utils/typography.js'
 import { supabase, isSupabaseConfigured } from './lib/supabaseClient.js'
 import { useCart } from './context/CartContext.jsx'
 
@@ -44,7 +44,8 @@ export default function App() {
       if (!data || data.type !== 'scentfused-preview-typography' || !data.settings) return
       const next = {}
       TYPOGRAPHY_KEYS.forEach((key) => {
-        if (typeof data.settings[key] === 'string') next[key] = data.settings[key]
+        const value = data.settings[key]
+        if (typeof value === 'string' || typeof value === 'number') next[key] = value
       })
       setPreviewSettings(next)
     }
@@ -114,14 +115,7 @@ export default function App() {
           promoBanner2Font: settingsRes.data.promo_banner_2_font || 'Robot Monster',
           promoBanner1FontSize: settingsRes.data.promo_banner_1_font_size || 30,
           promoBanner2FontSize: settingsRes.data.promo_banner_2_font_size || 30,
-          headerFont: settingsRes.data.header_font || '',
-          headerColor: settingsRes.data.header_color || '',
-          navFont: settingsRes.data.nav_font || '',
-          navColor: settingsRes.data.nav_color || '',
-          heroFont: settingsRes.data.hero_font || '',
-          heroColor: settingsRes.data.hero_color || '',
-          footerFont: settingsRes.data.footer_font || '',
-          footerColor: settingsRes.data.footer_color || ''
+          ...rowToSettings(settingsRes.data)
         })
       }
 
@@ -174,14 +168,7 @@ export default function App() {
         promo_banner_2_font: next.promoBanner2Font || null,
         promo_banner_1_font_size: next.promoBanner1FontSize || null,
         promo_banner_2_font_size: next.promoBanner2FontSize || null,
-        header_font: next.headerFont || null,
-        header_color: next.headerColor || null,
-        nav_font: next.navFont || null,
-        nav_color: next.navColor || null,
-        hero_font: next.heroFont || null,
-        hero_color: next.heroColor || null,
-        footer_font: next.footerFont || null,
-        footer_color: next.footerColor || null
+        ...settingsToRow(next)
       })
       .eq('id', 1)
     if (error) console.error('Failed to save settings:', error)
