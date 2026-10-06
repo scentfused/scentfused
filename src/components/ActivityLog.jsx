@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
+import { TYPOGRAPHY_COLUMNS } from '../utils/typography.js'
 
 const PAGE_SIZE = 100
 
@@ -29,16 +30,13 @@ const FIELD_LABELS = {
   promo_banner_1_font: 'Royal banner font',
   promo_banner_2_font: 'Marina banner font',
   promo_banner_1_font_size: 'Royal banner size',
-  promo_banner_2_font_size: 'Marina banner size',
-  header_font: 'header font',
-  header_color: 'header text color',
-  nav_font: 'nav bar font',
-  nav_color: 'nav bar text color',
-  hero_font: 'hero font',
-  hero_color: 'hero text color',
-  footer_font: 'footer font',
-  footer_color: 'footer text color'
+  promo_banner_2_font_size: 'Marina banner size'
 }
+
+// Fonts / sizes / colors saved from Site Settings (generated from one list).
+TYPOGRAPHY_COLUMNS.forEach((c) => {
+  FIELD_LABELS[c.column] = c.label
+})
 
 function formatTimestamp(value) {
   if (!value) return '—'
