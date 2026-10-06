@@ -36,5 +36,14 @@ export const defaultSettings = {
   promoBanner1Font: 'Robot Monster',
   promoBanner2Font: 'Robot Monster',
   promoBanner1FontSize: 30,
-  promoBanner2FontSize: 30
+  promoBanner2FontSize: 30,
+  // Per-area fonts and text colours. Empty = keep the site's original look.
+  headerFont: '',
+  headerColor: '',
+  navFont: '',
+  navColor: '',
+  heroFont: '',
+  heroColor: '',
+  footerFont: '',
+  footerColor: ''
 }
