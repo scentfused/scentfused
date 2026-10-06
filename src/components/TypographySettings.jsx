@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AREAS,
+  SIZE_MAX,
+  SIZE_MIN,
   TYPOGRAPHY_KEYS,
   availableFonts,
   contrastOnBlack,
   describeContrast,
-  fontStack
+  fontStack,
+  isValidSize
 } from '../utils/typography.js'
 
-// Admin -> Site Settings -> "Fonts & text colors".
+// Admin -> Site Settings -> "Fonts & text colors". Each section of the site gets a
+// font, a text size (a % of the original) and, where it makes sense, a color.
 //
 // Changes made here are a DRAFT. They are shown on a live preview of your real
 // site (the frame on the right) but are NOT saved, and visitors do not see
@@ -116,8 +120,8 @@ export default function TypographySettings({ settings, setSettings }) {
     <div className="settings-group" style={{ gridColumn: '1 / -1' }}>
       <h3 className="settings-group-title">Fonts &amp; text colors</h3>
       <p className="muted settings-hint">
-        Try changes here and watch them on the preview. Nothing goes live until you press
-        Publish. Anything left on "Site default" keeps your original look.
+        Open a section, change its font, size or color, and watch the preview. Nothing goes live
+        until you press Publish. Anything left on "Site default" keeps your original look.
       </p>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 28, alignItems: 'flex-start' }}>
@@ -125,95 +129,155 @@ export default function TypographySettings({ settings, setSettings }) {
         <div style={{ flex: '1 1 320px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18 }}>
           {AREAS.map((area) => {
             const font = draft[area.fontKey]
-            const color = draft[area.colorKey]
+            const color = area.colorKey ? draft[area.colorKey] : ''
+            const size = draft[area.sizeKey]
+            const sizePercent = isValidSize(size) ? Number(size) : 100
             const shownColor = color || area.defaultColor
             const shownFont = font || area.defaultFont
             const ratio = contrastOnBlack(shownColor)
             const verdict = describeContrast(ratio)
-            const isCustom = Boolean(font || color)
+            const isCustom = Boolean(font || color || isValidSize(size))
 
             return (
-              <div
+              <details
                 key={area.key}
-                style={{
-                  borderTop: '1px solid var(--hairline)',
-                  paddingTop: 16,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 12
-                }}
+                style={{ borderTop: '1px solid var(--hairline)', paddingTop: 14 }}
               >
-                <div>
-                  <strong style={{ color: 'var(--gold-bright)', fontWeight: 500, fontSize: 14 }}>
-                    {area.label}
-                  </strong>
-                  <div className="muted" style={{ fontSize: 12 }}>{area.hint}</div>
-                </div>
-
-                <label className="settings-row">
-                  Font for {area.label.toLowerCase()}
-                  <select value={font} onChange={(e) => change({ [area.fontKey]: e.target.value })}>
-                    <option value="">Site default ({area.defaultFont})</option>
-                    {fonts.map((f) => (
-                      <option key={f} value={f}>{f}</option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="settings-row">
-                  Text color for {area.label.toLowerCase()}
-                  <input
-                    type="color"
-                    value={shownColor}
-                    onChange={(e) => change({ [area.colorKey]: e.target.value })}
-                  />
-                </label>
-
-                <div
+                <summary
                   style={{
-                    background: '#000',
-                    border: '1px solid var(--hairline)',
-                    padding: '10px 14px',
-                    fontFamily: fontStack(shownFont),
-                    color: shownColor,
-                    fontSize: 18,
-                    lineHeight: 1.3
-                  }}
-                >
-                  {area.sample}
-                </div>
-
-                <div
-                  style={{
+                    cursor: 'pointer',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center',
+                    alignItems: 'baseline',
                     gap: 12,
-                    flexWrap: 'wrap'
+                    listStyle: 'none'
                   }}
                 >
-                  <span
+                  <span>
+                    <strong style={{ color: 'var(--gold-bright)', fontWeight: 500, fontSize: 14 }}>
+                      {area.label}
+                    </strong>
+                    <span className="muted" style={{ display: 'block', fontSize: 12 }}>{area.hint}</span>
+                  </span>
+                  {isCustom && (
+                    <span
+                      style={{
+                        fontSize: 10,
+                        letterSpacing: 1,
+                        textTransform: 'uppercase',
+                        border: '1px solid var(--gold)',
+                        color: 'var(--gold-bright)',
+                        padding: '2px 7px',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      Changed
+                    </span>
+                  )}
+                </summary>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 14 }}>
+                  <label className="settings-row">
+                    Font for {area.label.toLowerCase()}
+                    <select value={font} onChange={(e) => change({ [area.fontKey]: e.target.value })}>
+                      <option value="">Site default ({area.defaultFont})</option>
+                      {fonts.map((f) => (
+                        <option key={f} value={f}>{f}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="settings-row">
+                    <span style={{ whiteSpace: 'nowrap' }}>
+                      Text size for {area.label.toLowerCase()}{' '}
+                      <span style={{ color: 'var(--gold-bright)' }}>{sizePercent}%</span>
+                    </span>
+                    <input
+                      type="range"
+                      min={SIZE_MIN}
+                      max={SIZE_MAX}
+                      step={5}
+                      value={sizePercent}
+                      aria-label={`Text size for ${area.label.toLowerCase()}`}
+                      onChange={(e) => {
+                        const n = Number(e.target.value)
+                        change({ [area.sizeKey]: n === 100 ? '' : n })
+                      }}
+                      style={{ flex: 1, minWidth: 120, padding: 0, accentColor: 'var(--gold)', cursor: 'pointer' }}
+                    />
+                  </label>
+
+                  {area.colorKey && (
+                    <label className="settings-row">
+                      Text color for {area.label.toLowerCase()}
+                      <input
+                        type="color"
+                        value={shownColor}
+                        onChange={(e) => change({ [area.colorKey]: e.target.value })}
+                      />
+                    </label>
+                  )}
+
+                  <div
                     style={{
-                      fontSize: 12,
-                      color: verdict.level === 'good' ? 'var(--gold-dim)' : '#e8987c'
+                      background: '#000',
+                      border: '1px solid var(--hairline)',
+                      padding: '10px 14px',
+                      fontFamily: fontStack(shownFont),
+                      color: area.colorKey ? shownColor : 'var(--champagne)',
+                      fontSize: 18 * (sizePercent / 100),
+                      lineHeight: 1.3,
+                      overflow: 'hidden'
                     }}
                   >
-                    {color ? 'Your color' : 'Site default color'} · contrast on black{' '}
-                    {ratio ? `${ratio.toFixed(1)}:1` : '—'} ({verdict.text})
-                  </span>
+                    {area.sample}
+                  </div>
 
-                  {isCustom && (
-                    <button
-                      type="button"
-                      className="btn btn-line"
-                      style={{ padding: '8px 16px' }}
-                      onClick={() => change({ [area.fontKey]: '', [area.colorKey]: '' })}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: 12,
+                      flexWrap: 'wrap'
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 12,
+                        color: area.colorKey && verdict.level !== 'good' ? '#e8987c' : 'var(--gold-dim)'
+                      }}
                     >
-                      Reset {area.label.toLowerCase()}
-                    </button>
+                      {area.colorKey
+                        ? `${color ? 'Your color' : 'Site default color'} · contrast on black ${
+                            ratio ? `${ratio.toFixed(1)}:1` : '—'
+                          } (${verdict.text})`
+                        : 'Colors stay as they are.'}
+                    </span>
+
+                    {isCustom && (
+                      <button
+                        type="button"
+                        className="btn btn-line"
+                        style={{ padding: '8px 16px' }}
+                        onClick={() =>
+                          change({
+                            [area.fontKey]: '',
+                            [area.sizeKey]: '',
+                            ...(area.colorKey ? { [area.colorKey]: '' } : {})
+                          })
+                        }
+                      >
+                        Reset {area.label.toLowerCase()}
+                      </button>
+                    )}
+                  </div>
+
+                  {area.colorNote && (
+                    <p className="muted" style={{ margin: 0, fontSize: 12 }}>{area.colorNote}</p>
                   )}
                 </div>
-              </div>
+              </details>
             )
           })}
         </div>
