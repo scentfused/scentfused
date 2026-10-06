@@ -8,6 +8,7 @@ import { uploadImageToCloudinary } from '../lib/cloudinary.js'
 import { isProductSoldOut, hasSoldOutSize } from '../utils/stock.js'
 import { useStaff } from '../context/StaffContext.jsx'
 import ActivityLog from '../components/ActivityLog.jsx'
+import TypographySettings from '../components/TypographySettings.jsx'
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5MB, Cloudinary handles storage/optimization now
 
@@ -1116,6 +1117,8 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                       />
                     </label>
                   </div>
+
+                  <TypographySettings settings={settings} setSettings={setSettings} />
 
                   <div className="settings-group">
                     <h3 className="settings-group-title">Homepage</h3>
