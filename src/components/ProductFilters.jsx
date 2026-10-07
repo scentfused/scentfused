@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FILTER_GROUPS, SORTS, countFor } from '../utils/filters.js'
 
 // Filter + sort bar for a category page. It owns no data: the parent passes the
@@ -10,6 +10,17 @@ export default function ProductFilters({
   const [open, setOpen] = useState(
     () => typeof window !== 'undefined' && window.innerWidth >= 960
   )
+  // Which dropdown is open (only one at a time). Closes on outside click / Esc.
+  const [menu, setMenu] = useState(null)
+  const panelRef = useRef(null)
+  useEffect(() => {
+    if (!menu) return undefined
+    const onDown = (e) => { if (panelRef.current && !panelRef.current.contains(e.target)) setMenu(null) }
+    const onKey = (e) => { if (e.key === 'Escape') setMenu(null) }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }
+  }, [menu])
 
   // Build the groups that are switched on and have something to show.
   const groups = []
@@ -57,28 +68,39 @@ export default function ProductFilters({
       </div>
 
       {groups.length > 0 && open && (
-        <div className="shop-filter-panel" id="shop-filter-panel">
-          {groups.map((g) => (
-            <fieldset className="shop-filter-group" key={g.key}>
-              <legend>{g.title}</legend>
-              <div className="shop-chip-list">
-                {g.options.map((o) => {
-                  const on = (selection[g.key] || []).includes(o.label)
-                  return (
-                    <button
-                      type="button"
-                      key={o.label}
-                      className={`shop-chip${on ? ' is-on' : ''}`}
-                      aria-pressed={on}
-                      onClick={() => onToggle(g.key, o.label)}
-                    >
-                      {o.label} <span className="shop-chip-count">{o.count}</span>
-                    </button>
-                  )
-                })}
+        <div className="shop-filter-panel" id="shop-filter-panel" ref={panelRef}>
+          {groups.map((g) => {
+            const chosen = selection[g.key] || []
+            const isOpen = menu === g.key
+            return (
+              <div className="shop-dd" key={g.key}>
+                <button
+                  type="button"
+                  className={`shop-dd-btn${isOpen ? ' is-open' : ''}${chosen.length ? ' has-value' : ''}`}
+                  aria-haspopup="true"
+                  aria-expanded={isOpen}
+                  onClick={() => setMenu(isOpen ? null : g.key)}
+                >
+                  <span>{g.title}{chosen.length ? ` (${chosen.length})` : ''}</span>
+                  <span className="shop-dd-arrow" aria-hidden="true">▾</span>
+                </button>
+                {isOpen && (
+                  <div className="shop-dd-menu" role="group" aria-label={g.title}>
+                    {g.options.map((o) => {
+                      const on = chosen.includes(o.label)
+                      return (
+                        <label className={`shop-dd-option${on ? ' is-on' : ''}`} key={o.label}>
+                          <input type="checkbox" checked={on} onChange={() => onToggle(g.key, o.label)} />
+                          <span className="shop-dd-label">{o.label}</span>
+                          <span className="shop-chip-count">{o.count}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
-            </fieldset>
-          ))}
+            )
+          })}
         </div>
       )}
 
