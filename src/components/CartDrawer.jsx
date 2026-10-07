@@ -1,4 +1,5 @@
 import { useCart } from '../context/CartContext.jsx'
+import { optimizeImage } from '../utils/filters.js'
 
 export default function CartDrawer() {
   const { items, isCartOpen, setIsCartOpen, removeFromCart, updateQty, cartTotal } = useCart()
@@ -21,7 +22,7 @@ export default function CartDrawer() {
               {items.map((item) => (
                 <div className={`cart-item ${item.soldOut ? 'unavailable' : ''}`} key={item.itemId}>
                   <div className="cart-item-thumb">
-                    {item.image ? <img src={item.image} alt={item.name} /> : null}
+                    {item.image ? <img src={optimizeImage(item.image, 160)} alt={item.name} loading="lazy" decoding="async" /> : null}
                   </div>
                   <div className="cart-item-info">
                     <h4>{item.name}</h4>
