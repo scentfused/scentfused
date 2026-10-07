@@ -12,6 +12,7 @@ import WhatsAppButton from './components/WhatsAppButton.jsx'
 import QuickView from './components/QuickView.jsx'
 import { CATEGORIES } from './data/catalog.js'
 import { defaultSettings } from './data/settings.js'
+import { normalizeFilterOptions, serializeFilterOptions } from './utils/filters.js'
 import { shade } from './utils/color.js'
 import { buildTypographyCss, rowToSettings, settingsToRow, TYPOGRAPHY_KEYS } from './utils/typography.js'
 import { supabase, isSupabaseConfigured } from './lib/supabaseClient.js'
@@ -115,6 +116,7 @@ export default function App() {
           promoBanner2Font: settingsRes.data.promo_banner_2_font || 'Robot Monster',
           promoBanner1FontSize: settingsRes.data.promo_banner_1_font_size || 30,
           promoBanner2FontSize: settingsRes.data.promo_banner_2_font_size || 30,
+          filterOptions: normalizeFilterOptions(settingsRes.data.filter_options),
           ...rowToSettings(settingsRes.data)
         })
       }
@@ -168,7 +170,12 @@ export default function App() {
         promo_banner_2_font: next.promoBanner2Font || null,
         promo_banner_1_font_size: next.promoBanner1FontSize || null,
         promo_banner_2_font_size: next.promoBanner2FontSize || null,
-        ...settingsToRow(next)
+        ...settingsToRow(next),
+        // Only sent when the filter lists were actually changed, so every
+        // other setting still saves even before the filters SQL has been run.
+        ...(next.filterOptions !== settings.filterOptions
+          ? { filter_options: serializeFilterOptions(next.filterOptions) }
+          : {})
       })
       .eq('id', 1)
     if (error) console.error('Failed to save settings:', error)
@@ -197,7 +204,7 @@ export default function App() {
           <Route
             key={cat.key}
             path={`/${cat.key}`}
-            element={<CategoryPage products={products} categoryKey={cat.key} />}
+            element={<CategoryPage products={products} categoryKey={cat.key} filterOptions={settings.filterOptions} />}
           />
         ))}       
         <Route path="/product/:id" element={<ProductPage products={products} />} />
