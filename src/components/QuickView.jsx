@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useCart } from '../context/CartContext.jsx'
 import Icon from './Icon.jsx'
 import { firstAvailableVariant } from '../utils/stock.js'
+import { optimizeImage } from '../utils/filters.js'
 
 function getDisplayNote(product) {
   if (product.note && product.note.trim()) return product.note
@@ -55,7 +56,7 @@ export default function QuickView() {
         <button className="quickview-close" onClick={close}>&times;</button>
 
         <div className="quickview-image">
-          {product.image ? <img src={product.image} alt={product.name} /> : <Icon category={product.category} />}
+          {product.image ? <img src={optimizeImage(product.image, 800)} alt={product.name} decoding="async" /> : <Icon category={product.category} />}
         </div>
 
         <div className="quickview-info">
