@@ -67,6 +67,10 @@ export function CartProvider({ children }) {
     setIsCartOpen(true)
   }
 
+  function clearCart() {
+    setItems([])
+  }
+
   function removeFromCart(itemId) {
     setItems((prev) => prev.filter((i) => i.itemId !== itemId))
   }
@@ -122,6 +126,7 @@ export function CartProvider({ children }) {
         items,
         addToCart,
         removeFromCart,
+        clearCart,
         updateQty,
         syncCartPrices,
         cartCount,
