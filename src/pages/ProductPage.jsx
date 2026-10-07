@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, Navigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext.jsx'
 import { CATEGORY_FIELDS } from '../data/categoryFields.js'
 import { CATEGORIES } from '../data/catalog.js'
@@ -9,6 +9,7 @@ import Icon from '../components/Icon.jsx'
 import ProductCard from '../components/ProductCard.jsx'
 import { firstAvailableVariant } from '../utils/stock.js'
 import { optimizeImage, imageSrcSet } from '../utils/filters.js'
+import { productPath, findProductByParam } from '../utils/slug.js'
 
 function getDisplayNote(product) {
   if (product.note && product.note.trim()) return product.note
@@ -26,7 +27,7 @@ export default function ProductPage({ products }) {
   const [qty, setQty] = useState(1)
   const [added, setAdded] = useState(false)
 
-  const product = products.find((p) => String(p.id) === String(id))
+  const product = findProductByParam(products, id)
 
   const galleryImages = product
     ? [product.image, ...(product.images || [])].filter(Boolean)
@@ -54,6 +55,11 @@ export default function ProductPage({ products }) {
     if (!el) return
     el.scrollTo({ left: index * el.clientWidth, behavior: 'smooth' })
     setActiveIndex(index)
+  }
+
+  // Old number links (/product/17) and odd capitalisation go to the name link.
+  if (product && product.slug && id !== product.slug) {
+    return <Navigate to={productPath(product)} replace />
   }
 
   if (!product) {
