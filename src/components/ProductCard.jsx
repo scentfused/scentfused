@@ -3,6 +3,9 @@ import { useCart } from '../context/CartContext.jsx'
 import { CATEGORY_FIELDS } from '../data/categoryFields.js'
 import Icon from './Icon.jsx'
 import { isProductSoldOut } from '../utils/stock.js'
+import { optimizeImage, imageSrcSet } from '../utils/filters.js'
+
+const CARD_WIDTHS = [320, 480, 720, 960]
 
 const HOVER_ATTRIBUTE_KEYS = ['topNotes', 'heartNotes', 'baseNotes', 'concentration']
 
@@ -59,7 +62,16 @@ export default function ProductCard({ product, badge }) {
       <Link to={`/product/${product.id}`} className="card-link">
         <div className="tile">
           {product.image
-            ? <img src={product.image} alt={product.name} />
+            ? (
+              <img
+                src={optimizeImage(product.image, 480)}
+                srcSet={imageSrcSet(product.image, CARD_WIDTHS)}
+                sizes="(max-width: 520px) 100vw, (max-width: 960px) 50vw, 25vw"
+                alt={product.name}
+                loading="lazy"
+                decoding="async"
+              />
+            )
             : <Icon category={product.category} />}
 
           <div className="tile-hover">
