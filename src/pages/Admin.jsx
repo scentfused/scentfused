@@ -9,6 +9,8 @@ import { isProductSoldOut, hasSoldOutSize } from '../utils/stock.js'
 import { useStaff } from '../context/StaffContext.jsx'
 import ActivityLog from '../components/ActivityLog.jsx'
 import TypographySettings from '../components/TypographySettings.jsx'
+import FilterSettings from '../components/FilterSettings.jsx'
+import { formOptions } from '../utils/filters.js'
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5MB, Cloudinary handles storage/optimization now
 
@@ -706,7 +708,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                     }
                   >
                     <option value="">Select…</option>
-                    {field.options.map((opt) => (
+                    {formOptions(settings.filterOptions, field.key, field.options, draft.attributes?.[field.key]).map((opt) => (
                       <option key={opt} value={opt}>{opt}</option>
                     ))}
                   </select>
@@ -752,7 +754,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
               const current = draft.attributes?.[field.key] || []
               return (
                 <div className="attribute-checkboxes">
-                  {field.options.map((opt) => {
+                  {formOptions(settings.filterOptions, field.key, field.options, current).map((opt) => {
                     const checked = current.includes(opt)
                     return (
                       <label key={opt} className="attribute-checkbox">
@@ -1119,6 +1121,13 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                   </div>
 
                   <TypographySettings settings={settings} setSettings={setSettings} />
+
+                  <FilterSettings
+                    settings={settings}
+                    setSettings={setSettings}
+                    products={products}
+                    setProducts={setProducts}
+                  />
 
                   <div className="settings-group">
                     <h3 className="settings-group-title">Homepage</h3>
