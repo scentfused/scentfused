@@ -458,7 +458,7 @@ footer{border-top:1px solid var(--hairline);padding:32px 0 20px;}
   border:1px solid var(--hairline);background:var(--panel);padding:18px;
   display:flex;flex-direction:column;gap:8px;
 }
-.stat-label{font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--gold-dim);}
+.stat-label{font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--gold-bright);} /* here i have changed the color dim to bright*/
 .stat-value{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold-bright);}
 
 .admin-form-card, .admin-table-card{
@@ -1043,7 +1043,7 @@ header.nav{width:100%;}
   font-size:13px;color:var(--champagne);margin-right:4px;
 }
 .admin-user-chip em{
-  font-style:normal;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--gold-dim);
+  font-style:normal;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--gold-bright); /* here i have changed the color dim to bright*/
 }
 @media (max-width:640px){
   .admin-user-chip em{display:none;}
