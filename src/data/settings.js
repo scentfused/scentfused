@@ -45,5 +45,7 @@ export const defaultSettings = {
   heroFont: '',
   heroColor: '',
   footerFont: '',
-  footerColor: ''
+  footerColor: '',
+  // Shop filter lists (Site Settings -> Filters). See utils/filters.js
+  filterOptions: null
 }
