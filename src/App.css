@@ -537,11 +537,11 @@ footer{border-top:1px solid var(--hairline);padding:32px 0 20px;}
 .admin-table th:nth-child(8), .admin-table td:nth-child(8){width:160px;white-space:nowrap;}
 .admin-timestamp{font-size:12.5px;white-space:nowrap;}
 .admin-table th{
-  text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--gold-dim);
+  text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--gold-bright); /* here i have changed the color dim to bright*/
   padding:10px 12px;border-bottom:1px solid var(--hairline);font-weight:400;
 }
 .admin-table td{padding:14px 12px;border-bottom:1px solid var(--hairline);vertical-align:middle;height:70px;box-sizing:border-box;}
-.admin-table td.muted{color:var(--gold-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.admin-table td.muted{color:var(--gold-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}  /* here i have changed the color dim to bright*/
 .admin-table td:nth-child(2), .admin-table td:nth-child(3){white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .admin-thumb{
   width:42px;height:42px;border:1px solid var(--hairline);display:flex;align-items:center;justify-content:center;
