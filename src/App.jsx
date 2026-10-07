@@ -13,6 +13,8 @@ import QuickView from './components/QuickView.jsx'
 import { CATEGORIES } from './data/catalog.js'
 import { defaultSettings } from './data/settings.js'
 import { normalizeFilterOptions, serializeFilterOptions } from './utils/filters.js'
+import { normalizeDeliveryRates, normalizePaymentMethods, normalizeWhatsapp } from './utils/checkout.js'
+import CheckoutPage from './pages/CheckoutPage.jsx'
 import { shade } from './utils/color.js'
 import { buildTypographyCss, rowToSettings, settingsToRow, TYPOGRAPHY_KEYS } from './utils/typography.js'
 import { supabase, isSupabaseConfigured } from './lib/supabaseClient.js'
@@ -117,6 +119,9 @@ export default function App() {
           promoBanner1FontSize: settingsRes.data.promo_banner_1_font_size || 30,
           promoBanner2FontSize: settingsRes.data.promo_banner_2_font_size || 30,
           filterOptions: normalizeFilterOptions(settingsRes.data.filter_options),
+          deliveryRates: normalizeDeliveryRates(settingsRes.data.delivery_rates),
+          paymentMethods: normalizePaymentMethods(settingsRes.data.payment_methods),
+          whatsappNumber: normalizeWhatsapp(settingsRes.data.whatsapp_number),
           ...rowToSettings(settingsRes.data)
         })
       }
@@ -175,6 +180,16 @@ export default function App() {
         // other setting still saves even before the filters SQL has been run.
         ...(next.filterOptions !== settings.filterOptions
           ? { filter_options: serializeFilterOptions(next.filterOptions) }
+          : {}),
+        // Same idea for the checkout settings.
+        ...(next.deliveryRates !== settings.deliveryRates
+          ? { delivery_rates: normalizeDeliveryRates(next.deliveryRates) }
+          : {}),
+        ...(next.paymentMethods !== settings.paymentMethods
+          ? { payment_methods: normalizePaymentMethods(next.paymentMethods) }
+          : {}),
+        ...(next.whatsappNumber !== settings.whatsappNumber
+          ? { whatsapp_number: normalizeWhatsapp(next.whatsappNumber) }
           : {})
       })
       .eq('id', 1)
@@ -208,6 +223,7 @@ export default function App() {
           />
         ))}       
         <Route path="/product/:id" element={<ProductPage products={products} />} />
+        <Route path="/checkout" element={<CheckoutPage settings={settings} />} />
         <Route path="/help" element={<HelpPage />} />         
         <Route path="/search" element={<SearchResultsPage products={products} />} />
         <Route
