@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CATEGORIES, emptyDraft } from '../data/catalog.js'
 import { FONT_OPTIONS } from '../data/settings.js'
@@ -10,6 +10,8 @@ import { useStaff } from '../context/StaffContext.jsx'
 import ActivityLog from '../components/ActivityLog.jsx'
 import TypographySettings from '../components/TypographySettings.jsx'
 import FilterSettings from '../components/FilterSettings.jsx'
+import CheckoutSettings from '../components/CheckoutSettings.jsx'
+import OrdersPanel from '../components/OrdersPanel.jsx'
 import { formOptions } from '../utils/filters.js'
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5MB, Cloudinary handles storage/optimization now
@@ -82,6 +84,21 @@ export default function Admin({ products, setProducts, settings, setSettings }) 
 
   // Which section is showing in the main panel. Sidebar buttons set this.
   const [activeSection, setActiveSection] = useState('table')
+
+  // How many orders are waiting (shown next to "Orders" in the menu). Quietly
+  // stays at 0 if the orders table doesn't exist yet.
+  const [newOrders, setNewOrders] = useState(0)
+  useEffect(() => {
+    let stop = false
+    async function check() {
+      const { count, error: err } = await supabase
+        .from('orders').select('id', { count: 'exact', head: true }).eq('status', 'new')
+      if (!stop && !err && typeof count === 'number') setNewOrders(count)
+    }
+    check()
+    const t = setInterval(check, 90000)
+    return () => { stop = true; clearInterval(t) }
+  }, [])
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   const [aiPrompt, setAiPrompt] = useState('')
@@ -1016,6 +1033,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
 
   const ALL_NAV_ITEMS = [
     { key: 'settings', label: 'Site Settings', adminOnly: true },
+    { key: 'orders', label: newOrders > 0 ? `Orders (${newOrders} new)` : 'Orders' },
     { key: 'ai', label: 'AI Image Generation' },
     { key: 'royalInfographic', label: 'AI Regal Infographic Prompt' },
     { key: 'adInfographic', label: 'AI Ad Infographic Prompt' },
@@ -1121,6 +1139,8 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                   </div>
 
                   <TypographySettings settings={settings} setSettings={setSettings} />
+
+                  <CheckoutSettings settings={settings} setSettings={setSettings} />
 
                   <FilterSettings
                     settings={settings}
@@ -1317,6 +1337,14 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                     </label>
                   </div>
                 </div>
+              </section>
+            )}
+
+            {/* ---------- Orders ---------- */}
+            {activeSection === 'orders' && (
+              <section className="admin-panel">
+                <h2 className="admin-panel-title">Orders</h2>
+                <OrdersPanel onNewCount={setNewOrders} />
               </section>
             )}
 
