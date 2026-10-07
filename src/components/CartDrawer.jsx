@@ -1,10 +1,18 @@
+import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext.jsx'
 import { optimizeImage } from '../utils/filters.js'
 
 export default function CartDrawer() {
   const { items, isCartOpen, setIsCartOpen, removeFromCart, updateQty, cartTotal } = useCart()
 
+  const navigate = useNavigate()
+
   if (!isCartOpen) return null
+
+  function goToCheckout() {
+    setIsCartOpen(false)
+    navigate('/checkout')
+  }
 
   return (
     <div className="cart-overlay" onClick={() => setIsCartOpen(false)}>
@@ -50,7 +58,8 @@ export default function CartDrawer() {
                 <span>Subtotal</span>
                 <span>Rs. {cartTotal.toLocaleString()}</span>
               </div>
-              <button className="btn btn-solid cart-checkout" onClick={() => alert('Checkout coming soon!')}>
+              <p className="cart-delivery-note">Delivery charges are added at checkout.</p>
+              <button className="btn btn-solid cart-checkout" onClick={goToCheckout}>
                 Checkout
               </button>
             </div>
