@@ -8,6 +8,7 @@ import Footer from '../components/Footer.jsx'
 import Icon from '../components/Icon.jsx'
 import ProductCard from '../components/ProductCard.jsx'
 import { firstAvailableVariant } from '../utils/stock.js'
+import { optimizeImage, imageSrcSet } from '../utils/filters.js'
 
 function getDisplayNote(product) {
   if (product.note && product.note.trim()) return product.note
@@ -115,7 +116,14 @@ export default function ProductPage({ products }) {
               <div className="product-page-slider" ref={sliderRef} onScroll={handleSliderScroll}>
                 {galleryImages.map((img, i) => (
                   <div className="product-page-slide" key={i}>
-                    <img src={img} alt={`${product.name} ${i + 1}`} />
+                    <img
+                      src={optimizeImage(img, 900)}
+                      srcSet={imageSrcSet(img, [600, 900, 1300])}
+                      sizes="(max-width: 900px) 100vw, 50vw"
+                      alt={`${product.name} ${i + 1}`}
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                      decoding="async"
+                    />
                   </div>
                 ))}
               </div>
