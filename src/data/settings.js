@@ -47,5 +47,9 @@ export const defaultSettings = {
   footerFont: '',
   footerColor: '',
   // Shop filter lists (Site Settings -> Filters). See utils/filters.js
-  filterOptions: null
+  filterOptions: null,
+  // Checkout (Site Settings -> Checkout). See utils/checkout.js
+  deliveryRates: null,
+  paymentMethods: null,
+  whatsappNumber: ''
 }
