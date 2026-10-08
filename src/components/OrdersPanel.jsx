@@ -55,6 +55,25 @@ export default function OrdersPanel({ onNewCount }) {
     }
   }
 
+  async function deleteOrder(order) {
+    const stockNote = order.status === 'cancelled' ? '' : '\n\nTip: if this order will not be delivered, set it to Cancelled first so its items go back into stock.'
+    if (!window.confirm(`Delete order ${order.order_number} (${order.customer_name})? It moves to the Archive, where the administrator can restore it.${stockNote}`)) return
+    const prev = orders
+    const next = orders.filter((o) => o.id !== order.id)
+    setOrders(next)
+    setOpen(null)
+    if (onNewCount) onNewCount(next.filter((o) => o.status === 'new').length)
+    const { data, error: err } = await supabase.from('orders').delete().eq('id', order.id).select()
+    if (err || !data || data.length === 0) {
+      console.error('Failed to delete order:', err)
+      setError('That order could not be deleted. You may need to log in again, or the archive SQL has not been run yet.')
+      setOrders(prev)
+      if (onNewCount) onNewCount(prev.filter((o) => o.status === 'new').length)
+    } else {
+      setError('')
+    }
+  }
+
   const shown = orders.filter((o) => {
     if (filter === 'all') return true
     if (filter === 'active') return o.status === 'new' || o.status === 'confirmed' || o.status === 'shipped'
@@ -130,6 +149,8 @@ export default function OrdersPanel({ onNewCount }) {
                           </p>
                           {o.notes && <p><strong>Notes:</strong> {o.notes}</p>}
                           {o.updated_by_name && <p className="muted">Last status change by {o.updated_by_name}, {when(o.updated_at)}</p>}
+                          <p className="muted">Setting an order to Cancelled puts its items back in stock.</p>
+                          <button type="button" className="btn btn-line orders-delete" onClick={() => deleteOrder(o)}>Delete order</button>
                         </div>
                       </div>
                     </td>
