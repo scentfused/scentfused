@@ -2,16 +2,17 @@ import { useSearchParams, Link } from 'react-router-dom'
 import Nav from '../components/Nav.jsx'
 import Footer from '../components/Footer.jsx'
 import ProductCard from '../components/ProductCard.jsx'
+import { sortProducts, collectionOf } from '../utils/filters.js'
 
 export default function SearchResultsPage({ products }) {
   const [searchParams] = useSearchParams()
   const query = (searchParams.get('q') || '').trim()
 
   const results = query
-    ? products.filter((p) => {
-        const haystack = `${p.name} ${p.note || ''} ${p.description || ''}`.toLowerCase()
+    ? sortProducts(products.filter((p) => {
+        const haystack = `${p.name} ${p.note || ''} ${p.description || ''} ${collectionOf(p)}`.toLowerCase()
         return haystack.includes(query.toLowerCase())
-      })
+      }), 'az')
     : []
 
   return (
