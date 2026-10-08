@@ -188,7 +188,7 @@ export default function CheckoutPage({ settings }) {
             </label>
             <label>City
               <select value={form.cityChoice} onChange={(e) => set('cityChoice', e.target.value)}>
-                {rates.cities.map((c) => <option key={c.city} value={c.city}>{c.city}</option>)}
+                {[...rates.cities].sort((a, b) => a.city.localeCompare(b.city)).map((c) => <option key={c.city} value={c.city}>{c.city}</option>)}
                 <option value={OTHER}>{rates.cities.length ? 'Other city…' : 'Enter your city…'}</option>
               </select>
             </label>
