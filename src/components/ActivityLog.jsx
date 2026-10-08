@@ -35,6 +35,7 @@ const FIELD_LABELS = {
   delivery_rates: 'delivery charges',
   payment_methods: 'payment methods',
   whatsapp_number: 'WhatsApp number',
+  low_stock_threshold: 'Low-stock level',
   status: 'status'
 }
 
@@ -57,6 +58,7 @@ function formatTimestamp(value) {
 }
 
 function describeAction(row) {
+  if (row.target === 'order' && row.action === 'deleted') return 'Deleted an order'
   if (row.target === 'order') return `Order ${row.details?.status ? 'marked ' + row.details.status : 'updated'}`
   if (row.target === 'settings') return 'Changed site settings'
   if (row.action === 'added') return 'Added a product'
