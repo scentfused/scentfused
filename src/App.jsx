@@ -12,9 +12,13 @@ import WhatsAppButton from './components/WhatsAppButton.jsx'
 import QuickView from './components/QuickView.jsx'
 import { CATEGORIES } from './data/catalog.js'
 import { defaultSettings } from './data/settings.js'
-import { normalizeFilterOptions, serializeFilterOptions } from './utils/filters.js'
+import { normalizeFilterOptions, serializeFilterOptions, activeCollections } from './utils/filters.js'
 import { normalizeDeliveryRates, normalizePaymentMethods, normalizeWhatsapp } from './utils/checkout.js'
 import CheckoutPage from './pages/CheckoutPage.jsx'
+import CollectionPage from './pages/CollectionPage.jsx'
+import CollectionsPage from './pages/CollectionsPage.jsx'
+import { SiteContext } from './context/SiteContext.jsx'
+import { withStockApplied, normalizeThreshold } from './utils/stock.js'
 import { shade } from './utils/color.js'
 import { buildTypographyCss, rowToSettings, settingsToRow, TYPOGRAPHY_KEYS } from './utils/typography.js'
 import { supabase, isSupabaseConfigured } from './lib/supabaseClient.js'
@@ -122,6 +126,7 @@ export default function App() {
           deliveryRates: normalizeDeliveryRates(settingsRes.data.delivery_rates),
           paymentMethods: normalizePaymentMethods(settingsRes.data.payment_methods),
           whatsappNumber: normalizeWhatsapp(settingsRes.data.whatsapp_number),
+          lowStockThreshold: normalizeThreshold(settingsRes.data.low_stock_threshold),
           ...rowToSettings(settingsRes.data)
         })
       }
@@ -135,9 +140,17 @@ export default function App() {
 
   // Once live products are loaded, re-check anything already in the cart so
   // prices saved earlier (e.g. before a sale was set) match current pricing.
+  // What shoppers see: a size whose stock quantity is 0 counts as sold out.
+  // (Admin works with the raw `products`.)
+  const shopProducts = useMemo(() => withStockApplied(products), [products])
+  const collections = useMemo(
+    () => activeCollections(shopProducts, settings.filterOptions),
+    [shopProducts, settings.filterOptions]
+  )
+
   useEffect(() => {
-    if (products.length > 0) syncCartPrices(products)
-  }, [products, syncCartPrices])
+    if (shopProducts.length > 0) syncCartPrices(shopProducts)
+  }, [shopProducts, syncCartPrices])
 
   // Derive the bright/dim accent shades from the single chosen accent color,
   // and expose the brand font as a CSS variable, so both apply live site-wide.
@@ -190,6 +203,9 @@ export default function App() {
           : {}),
         ...(next.whatsappNumber !== settings.whatsappNumber
           ? { whatsapp_number: normalizeWhatsapp(next.whatsappNumber) }
+          : {}),
+        ...(next.lowStockThreshold !== settings.lowStockThreshold
+          ? { low_stock_threshold: normalizeThreshold(next.lowStockThreshold) }
           : {})
       })
       .eq('id', 1)
@@ -206,6 +222,7 @@ export default function App() {
   }
 
   return (
+    <SiteContext.Provider value={{ collections, lowStockThreshold: settings.lowStockThreshold }}>
     <div style={themeVars} className="app-shell">
       {typographyCss && <style>{typographyCss}</style>}
       {loadError && (
@@ -214,18 +231,20 @@ export default function App() {
         </div>
       )}
       <Routes>
-        <Route path="/" element={<Home products={products} settings={settings} />} />
+        <Route path="/" element={<Home products={shopProducts} settings={settings} />} />
         {CATEGORIES.map((cat) => (
           <Route
             key={cat.key}
             path={`/${cat.key}`}
-            element={<CategoryPage products={products} categoryKey={cat.key} filterOptions={settings.filterOptions} />}
+            element={<CategoryPage products={shopProducts} categoryKey={cat.key} filterOptions={settings.filterOptions} />}
           />
         ))}       
-        <Route path="/product/:id" element={<ProductPage products={products} />} />
+        <Route path="/product/:id" element={<ProductPage products={shopProducts} />} />
+        <Route path="/collections" element={<CollectionsPage />} />
+        <Route path="/collection/:slug" element={<CollectionPage products={shopProducts} filterOptions={settings.filterOptions} />} />
         <Route path="/checkout" element={<CheckoutPage settings={settings} />} />
         <Route path="/help" element={<HelpPage />} />         
-        <Route path="/search" element={<SearchResultsPage products={products} />} />
+        <Route path="/search" element={<SearchResultsPage products={shopProducts} />} />
         <Route
           path="/admin"
           element={
@@ -244,5 +263,6 @@ export default function App() {
         <WhatsAppButton />
         <QuickView />
     </div>
+    </SiteContext.Provider>
   )
 }
