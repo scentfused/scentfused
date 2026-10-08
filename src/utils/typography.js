@@ -24,7 +24,9 @@ const SERIF_FONTS = ['Cormorant Garamond', 'Cinzel']
 
 export function availableFonts() {
   const all = [...BASE_FONTS, ...FONT_OPTIONS]
-  return all.filter((f, i) => all.indexOf(f) === i && !NOT_REAL_FONTS.includes(f))
+  return all
+    .filter((f, i) => all.indexOf(f) === i && !NOT_REAL_FONTS.includes(f))
+    .sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }))
 }
 
 export function fontStack(name) {
