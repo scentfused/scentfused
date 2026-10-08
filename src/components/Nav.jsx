@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext.jsx'
+import { useSite } from '../context/SiteContext.jsx'
 
 const LOGO_URL = 'https://res.cloudinary.com/nqotqftf/image/upload/v1789151310/gold_icon_512px.ico'
 
@@ -10,6 +11,7 @@ export default function Nav() {
   const [searchQuery, setSearchQuery] = useState('')
   const { cartCount, setIsCartOpen } = useCart()
   const navigate = useNavigate()
+  const { collections } = useSite()
 
   const links = [
     { to: '/', label: 'Home', end: true },
@@ -100,6 +102,22 @@ export default function Nav() {
               </NavLink>
             </li>
           ))}
+          {collections.length > 0 && (
+            <li className="nav-lineups">
+              <NavLink to="/collections" end className={({ isActive }) => (isActive ? 'active' : '')} onClick={closeMenu}>
+                Line-ups
+              </NavLink>
+              <ul className="nav-lineups-list">
+                {collections.map((c) => (
+                  <li key={c.slug}>
+                    <NavLink to={`/collection/${c.slug}`} className={({ isActive }) => (isActive ? 'active' : '')} onClick={closeMenu}>
+                      {c.name}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </li>
+          )}
         </ul>
 
         <div className="nav-drawer-actions">
