@@ -5,14 +5,16 @@ import { FONT_OPTIONS } from '../data/settings.js'
 import { CATEGORY_FIELDS } from '../data/categoryFields.js'
 import { supabase } from '../lib/supabaseClient.js'
 import { uploadImageToCloudinary } from '../lib/cloudinary.js'
-import { isProductSoldOut, hasSoldOutSize } from '../utils/stock.js'
+import { isProductSoldOut, hasSoldOutSize, lowStockCount, normalizeThreshold, stockRows, isTracked } from '../utils/stock.js'
 import { useStaff } from '../context/StaffContext.jsx'
 import ActivityLog from '../components/ActivityLog.jsx'
 import TypographySettings from '../components/TypographySettings.jsx'
 import FilterSettings from '../components/FilterSettings.jsx'
 import CheckoutSettings from '../components/CheckoutSettings.jsx'
 import OrdersPanel from '../components/OrdersPanel.jsx'
-import { formOptions } from '../utils/filters.js'
+import { formOptions, sortAZ, collectionOf } from '../utils/filters.js'
+import StockPanel from '../components/StockPanel.jsx'
+import ArchivePanel from '../components/ArchivePanel.jsx'
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5MB, Cloudinary handles storage/optimization now
 
@@ -238,6 +240,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
   const [carouselCategory, setCarouselCategory] = useState(CATEGORIES[0]?.key || '')
   const [carouselPick, setCarouselPick] = useState('')
   const carouselCategoryProducts = products.filter((p) => p.category === carouselCategory)
+    .sort((a, b) => a.name.localeCompare(b.name))
   const carouselSelectedProducts = (settings.carouselProductIds || [])
     .map((id) => products.find((p) => p.id === id))
     .filter(Boolean)
@@ -259,22 +262,85 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
   const [filterName, setFilterName] = useState('')
   const [filterCategory, setFilterCategory] = useState('all')
   const [filterVariant, setFilterVariant] = useState('all')
+  const [filterCollection, setFilterCollection] = useState('all')
+  const [filterGender, setFilterGender] = useState('all')
+  const [filterStock, setFilterStock] = useState('all')
+  // bulk assign
+  const [selectedIds, setSelectedIds] = useState([])
+  const [bulkCollection, setBulkCollection] = useState('')
+  const [bulkGender, setBulkGender] = useState('')
+  const [bulkBusy, setBulkBusy] = useState(false)
+  const [bulkMsg, setBulkMsg] = useState('')
 
   const allVariantLabels = useMemo(() => {
     const set = new Set()
     products.forEach((p) => (p.variants || []).forEach((v) => set.add(v.label)))
-    return Array.from(set)
+    return sortAZ(Array.from(set))
   }, [products])
+
+  // Category dropdowns and product pickers list things A–Z.
+  const categoriesAZ = useMemo(() => CATEGORIES.slice().sort((a, b) => a.label.localeCompare(b.label)), [])
+  const productsAZ = useMemo(() => products.slice().sort((a, b) => a.name.localeCompare(b.name)), [products])
+
+  const lowStockThreshold = normalizeThreshold(settings.lowStockThreshold)
 
   const visible = products
     .filter((p) => {
       if (filterName && !p.name.toLowerCase().includes(filterName.toLowerCase())) return false
       if (filterCategory !== 'all' && p.category !== filterCategory) return false
       if (filterVariant !== 'all' && !(p.variants || []).some((v) => v.label === filterVariant)) return false
+      if (filterCollection === '__none' && collectionOf(p)) return false
+      if (filterCollection !== 'all' && filterCollection !== '__none' && collectionOf(p).toLowerCase() !== filterCollection.toLowerCase()) return false
+      if (filterGender === '__none' && p.attributes?.gender) return false
+      if (filterGender !== 'all' && filterGender !== '__none' && String(p.attributes?.gender || '').toLowerCase() !== filterGender.toLowerCase()) return false
+      if (filterStock !== 'all') {
+        const rows = stockRows([p], lowStockThreshold)
+        const hit = filterStock === 'low'
+          ? rows.some((r) => r.status === 'low' || (r.status === 'out' && isTracked(r.variant)))
+          : filterStock === 'out'
+            ? rows.some((r) => r.status === 'out')
+            : rows.some((r) => r.status === 'untracked')
+        if (!hit) return false
+      }
       return true
     })
     .slice()
     .sort((a, b) => a.name.localeCompare(b.name))
+
+  const lowCount = useMemo(() => lowStockCount(products, lowStockThreshold), [products, lowStockThreshold])
+  const collectionChoices = useMemo(
+    () => formOptions(settings.filterOptions, 'collection', [], products.map((p) => collectionOf(p)).filter(Boolean)),
+    [settings.filterOptions, products]
+  )
+  const genderChoices = useMemo(
+    () => formOptions(settings.filterOptions, 'gender', ['Men', 'Women', 'Unisex'], products.map((p) => p.attributes?.gender).filter(Boolean)),
+    [settings.filterOptions, products]
+  )
+
+  async function applyBulk() {
+    if (!selectedIds.length || (!bulkCollection && !bulkGender)) return
+    const parts = []
+    if (bulkCollection) parts.push(bulkCollection === '__clear' ? 'remove the collection' : `set the collection to "${bulkCollection}"`)
+    if (bulkGender) parts.push(bulkGender === '__clear' ? 'remove the gender' : `set the gender to "${bulkGender}"`)
+    if (!window.confirm(`${selectedIds.length} product${selectedIds.length === 1 ? '' : 's'}: ${parts.join(' and ')}?`)) return
+    setBulkBusy(true)
+    setBulkMsg('')
+    let failed = 0
+    const updated = new Map()
+    for (const id of selectedIds) {
+      const p = products.find((x) => x.id === id)
+      if (!p) continue
+      const attrs = { ...(p.attributes || {}) }
+      if (bulkCollection) attrs.collection = bulkCollection === '__clear' ? '' : bulkCollection
+      if (bulkGender) attrs.gender = bulkGender === '__clear' ? '' : bulkGender
+      const { error } = await supabase.from('products').update({ attributes: attrs }).eq('id', id)
+      if (error) { failed += 1; console.error('Bulk update failed for', id, error) } else updated.set(id, { ...p, attributes: attrs })
+    }
+    if (updated.size) setProducts((prev) => prev.map((p) => updated.get(p.id) || p))
+    setBulkBusy(false)
+    setBulkMsg(failed ? `${updated.size} updated, ${failed} could not be saved.` : `Done — ${updated.size} product${updated.size === 1 ? '' : 's'} updated.`)
+    if (!failed) { setSelectedIds([]); setBulkCollection(''); setBulkGender('') }
+  }
 
   const stats = useMemo(() => {
     const total = products.length
@@ -324,8 +390,8 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
       changes.push({ label: 'Features', from: oldFeatures || '—', to: newFeatures || '—' })
     }
 
-    const oldVariants = (original.variants || []).map((v) => `${v.label}: Rs.${v.price}${v.salePrice ? ' (sale Rs.' + v.salePrice + ')' : ''}${v.soldOut ? ' [SOLD OUT]' : ''}`).join(', ')
-    const newVariants = (payload.variants || []).map((v) => `${v.label}: Rs.${v.price}${v.salePrice ? ' (sale Rs.' + v.salePrice + ')' : ''}${v.soldOut ? ' [SOLD OUT]' : ''}`).join(', ')
+    const oldVariants = (original.variants || []).map((v) => `${v.label}: Rs.${v.price}${v.salePrice ? ' (sale Rs.' + v.salePrice + ')' : ''}${v.soldOut ? ' [SOLD OUT]' : ''}${v.stock != null && v.stock !== '' ? ' [stock ' + v.stock + ']' : ''}`).join(', ')
+    const newVariants = (payload.variants || []).map((v) => `${v.label}: Rs.${v.price}${v.salePrice ? ' (sale Rs.' + v.salePrice + ')' : ''}${v.soldOut ? ' [SOLD OUT]' : ''}${v.stock != null && v.stock !== '' ? ' [stock ' + v.stock + ']' : ''}`).join(', ')
     if (oldVariants !== newVariants) {
       changes.push({ label: 'Variants', from: oldVariants || '—', to: newVariants || '—' })
     }
@@ -369,7 +435,11 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
         label: v.label.trim(),
         price: Number(v.price),
         salePrice: v.salePrice !== '' && v.salePrice != null ? Number(v.salePrice) : null,
-        soldOut: Boolean(v.soldOut)
+        soldOut: Boolean(v.soldOut),
+        // Stock is optional: leave it empty to not track this size.
+        ...(v.stock !== '' && v.stock != null && !isNaN(Number(v.stock))
+          ? { stock: Math.max(0, Math.floor(Number(v.stock))) }
+          : {})
       }))
 
     if (!draft.name.trim() || cleanVariants.length === 0) {
@@ -486,7 +556,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
         if (!salePrice && product.sale_price && Number(v.price) === Number(product.price)) {
           salePrice = String(product.sale_price)
         }
-        return { label: v.label, price: String(v.price), salePrice, soldOut: Boolean(v.soldOut) }
+        return { label: v.label, price: String(v.price), salePrice, soldOut: Boolean(v.soldOut), stock: v.stock != null ? String(v.stock) : '' }
       }),
       description: product.description || '',
       features: (product.features || []).join('\n'),
@@ -502,7 +572,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
 
   async function handleDelete(id) {
     const target = products.find((p) => p.id === id)
-    if (!window.confirm(`Delete "${target ? target.name : 'this product'}"? This can't be undone.`)) return
+    if (!window.confirm(`Delete "${target ? target.name : 'this product'}"? It moves to the Archive, where the administrator can restore it.`)) return
 
     if (editingId === id) resetForm()
 
@@ -684,7 +754,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
               value={draft.category}
               onChange={(e) => setDraft({ ...draft, category: e.target.value, attributes: {} })}
             >
-              {CATEGORIES.map((c) => (
+              {categoriesAZ.map((c) => (
                 <option key={c.key} value={c.key}>{c.label}</option>
               ))}
             </select>
@@ -729,6 +799,11 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                       <option key={opt} value={opt}>{opt}</option>
                     ))}
                   </select>
+                )}
+
+                {field.type === 'select' && field.key === 'collection'
+                  && formOptions(settings.filterOptions, 'collection', [], draft.attributes?.collection).length === 0 && (
+                  <small className="admin-field-hint">No collections yet. Add them in Site Settings → Filters → Collection.</small>
                 )}
 
                 {field.type === 'tags' && (
@@ -833,7 +908,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
           </label>
 
           <div className="admin-form-wide">
-            <span className="variants-label">Variants — size, price, and optional sale price (at least one required)</span>
+            <span className="variants-label">Variants — size, price, optional sale price and stock quantity (at least one required). Stock: leave empty to not track; at 0 the size shows as sold out.</span>
             {(draft.variants || []).map((v, i) => (
               <div className="variant-row" key={i}>
                 <input
@@ -868,6 +943,20 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                     setDraft({ ...draft, variants: next })
                   }}
                 />
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  className="variant-stock-input"
+                  placeholder="Stock qty"
+                  aria-label="Stock quantity (leave empty to not track)"
+                  value={v.stock == null ? '' : v.stock}
+                  onChange={(e) => {
+                    const next = [...draft.variants]
+                    next[i] = { ...next[i], stock: e.target.value }
+                    setDraft({ ...draft, variants: next })
+                  }}
+                />
                 <label className="variant-soldout">
                   <input
                     type="checkbox"
@@ -892,7 +981,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
             <button
               type="button"
               className="btn btn-line"
-              onClick={() => setDraft({ ...draft, variants: [...(draft.variants || []), { label: '', price: '', salePrice: '', soldOut: false }] })}
+              onClick={() => setDraft({ ...draft, variants: [...(draft.variants || []), { label: '', price: '', salePrice: '', soldOut: false, stock: '' }] })}
             >
               + Add variant
             </button>
@@ -1039,6 +1128,8 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
     { key: 'adInfographic', label: 'AI Ad Infographic Prompt' },
     { key: 'product', label: 'Add a Product' },
     { key: 'table', label: 'Products' },
+    { key: 'stock', label: lowCount > 0 ? `Stock (${lowCount} low)` : 'Stock' },
+    { key: 'archive', label: 'Archive', adminOnly: true },
     { key: 'activity', label: 'Activity Log', adminOnly: true }
   ]
   const NAV_ITEMS = ALL_NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin)
@@ -1286,7 +1377,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                         value={carouselCategory}
                         onChange={(e) => { setCarouselCategory(e.target.value); setCarouselPick('') }}
                       >
-                        {CATEGORIES.map((c) => (
+                        {categoriesAZ.map((c) => (
                           <option key={c.key} value={c.key}>{c.label}</option>
                         ))}
                       </select>
@@ -1357,7 +1448,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                     Base this on an existing product (optional)
                     <select value={aiSelectedProductId} onChange={(e) => handleSelectAIProduct(e.target.value)}>
                       <option value="">Choose a product…</option>
-                      {products.map((p) => (
+                      {productsAZ.map((p) => (
                         <option key={p.id} value={p.id}>{p.name}</option>
                       ))}
                     </select>
@@ -1427,7 +1518,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                     Base this on an existing product
                     <select value={royalSelectedProductId} onChange={(e) => handleSelectRoyalProduct(e.target.value)}>
                       <option value="">Choose a product…</option>
-                      {products.map((p) => (
+                      {productsAZ.map((p) => (
                         <option key={p.id} value={p.id}>{p.name}</option>
                       ))}
                     </select>
@@ -1473,7 +1564,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                     Base this on an existing product
                     <select value={adSelectedProductId} onChange={(e) => handleSelectAdProduct(e.target.value)}>
                       <option value="">Choose a product…</option>
-                      {products.map((p) => (
+                      {productsAZ.map((p) => (
                         <option key={p.id} value={p.id}>{p.name}</option>
                       ))}
                     </select>
@@ -1538,7 +1629,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                   />
                   <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
                     <option value="all">All categories</option>
-                    {CATEGORIES.map((c) => (
+                    {categoriesAZ.map((c) => (
                       <option key={c.key} value={c.key}>{c.label}</option>
                     ))}
                   </select>
@@ -1548,15 +1639,63 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                       <option key={label} value={label}>{label}</option>
                     ))}
                   </select>
+                  <select value={filterCollection} onChange={(e) => setFilterCollection(e.target.value)} aria-label="Filter by collection">
+                    <option value="all">All collections</option>
+                    <option value="__none">No collection</option>
+                    {collectionChoices.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <select value={filterGender} onChange={(e) => setFilterGender(e.target.value)} aria-label="Filter by gender">
+                    <option value="all">All genders</option>
+                    <option value="__none">No gender</option>
+                    {genderChoices.map((g) => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                  <select value={filterStock} onChange={(e) => setFilterStock(e.target.value)} aria-label="Filter by stock">
+                    <option value="all">Any stock</option>
+                    <option value="low">Low or out (tracked)</option>
+                    <option value="out">Sold out</option>
+                    <option value="untracked">Stock not tracked</option>
+                  </select>
                 </div>
+
+                {selectedIds.length > 0 && (
+                  <div className="admin-bulk-bar" role="region" aria-label="Bulk edit">
+                    <strong>{selectedIds.length} selected</strong>
+                    <select value={bulkCollection} onChange={(e) => setBulkCollection(e.target.value)} aria-label="Set collection">
+                      <option value="">Collection: leave as is</option>
+                      <option value="__clear">Remove collection</option>
+                      {collectionChoices.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <select value={bulkGender} onChange={(e) => setBulkGender(e.target.value)} aria-label="Set gender">
+                      <option value="">Gender: leave as is</option>
+                      <option value="__clear">Remove gender</option>
+                      {genderChoices.map((g) => <option key={g} value={g}>{g}</option>)}
+                    </select>
+                    <button type="button" className="btn btn-solid" onClick={applyBulk} disabled={bulkBusy || (!bulkCollection && !bulkGender)}>
+                      {bulkBusy ? 'Saving…' : 'Apply'}
+                    </button>
+                    <button type="button" className="btn btn-line" onClick={() => setSelectedIds([])}>Clear selection</button>
+                  </div>
+                )}
+                {bulkMsg && <p className="muted" role="status">{bulkMsg}</p>}
 
                 <div className="admin-table-scroll">
                 <table className="admin-table">
                   <thead>
                     <tr>
+                      <th>
+                        <input
+                          type="checkbox"
+                          aria-label="Select all shown products"
+                          checked={visible.length > 0 && visible.every((p) => selectedIds.includes(p.id))}
+                          onChange={(e) => setSelectedIds(e.target.checked ? visible.map((p) => p.id) : [])}
+                        />
+                      </th>
                       <th></th>
                       <th>Name</th>
                       <th>Category</th>
+                      <th>Collection</th>
+                      <th>Gender</th>
+                      <th>Stock</th>
                       <th>Note</th>
                       <th>Price</th>
                       <th>Added</th>
@@ -1568,6 +1707,14 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                     {visible.map((p) => (
                       <Fragment key={p.id}>
                         <tr>
+                          <td>
+                            <input
+                              type="checkbox"
+                              aria-label={`Select ${p.name}`}
+                              checked={selectedIds.includes(p.id)}
+                              onChange={(e) => setSelectedIds((prev) => (e.target.checked ? [...prev, p.id] : prev.filter((x) => x !== p.id)))}
+                            />
+                          </td>
                           <td>
                             <div className="admin-thumb">
                               {p.image
@@ -1583,6 +1730,15 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                             )}
                           </td>
                           <td>{CATEGORIES.find((c) => c.key === p.category)?.label}</td>
+                          <td>{collectionOf(p) || <span className="muted">—</span>}</td>
+                          <td>{p.attributes?.gender || <span className="muted">—</span>}</td>
+                          <td className="admin-stock-cell">
+                            {stockRows([p], lowStockThreshold).map((r) => (
+                              <span key={r.index} className={`stock-pill stock-${r.status}`} title={r.status === 'untracked' ? 'Not tracked' : undefined}>
+                                {r.variant.label}: {r.status === 'untracked' ? '—' : r.status === 'out' && r.stock == null ? 'out' : r.stock}
+                              </span>
+                            ))}
+                          </td>
                           <td className="muted">{getDisplayNote(p)}</td>
                           <td>Rs. {Number(p.price).toLocaleString()}</td>
                           <td className="muted admin-timestamp">
@@ -1602,7 +1758,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                         </tr>
                         {editingId === p.id && (
                           <tr id={`edit-row-${p.id}`}>
-                            <td colSpan="8" className="admin-inline-edit-cell">
+                            <td colSpan="12" className="admin-inline-edit-cell">
                               {renderProductForm()}
                             </td>
                           </tr>
@@ -1611,12 +1767,34 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                     ))}
                     {visible.length === 0 && (
                       <tr>
-                        <td colSpan="8" className="muted">No products match these filters.</td>
+                        <td colSpan="12" className="muted">No products match these filters.</td>
                       </tr>
                     )}
                   </tbody>
                 </table>
                 </div>
+              </section>
+            )}
+
+            {/* ---------- Stock ---------- */}
+            {activeSection === 'stock' && (
+              <section className="admin-panel">
+                <h2 className="admin-panel-title">Stock</h2>
+                <StockPanel
+                  products={products}
+                  setProducts={setProducts}
+                  threshold={lowStockThreshold}
+                  isAdmin={isAdmin}
+                  onThreshold={(n) => setSettings({ ...settings, lowStockThreshold: n })}
+                />
+              </section>
+            )}
+
+            {/* ---------- Archive (administrator only) ---------- */}
+            {activeSection === 'archive' && isAdmin && (
+              <section className="admin-panel">
+                <h2 className="admin-panel-title">Archive</h2>
+                <ArchivePanel setProducts={setProducts} />
               </section>
             )}
 
