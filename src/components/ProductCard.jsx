@@ -3,7 +3,7 @@ import { useCart } from '../context/CartContext.jsx'
 import { CATEGORY_FIELDS } from '../data/categoryFields.js'
 import Icon from './Icon.jsx'
 import { isProductSoldOut } from '../utils/stock.js'
-import { optimizeImage, imageSrcSet } from '../utils/filters.js'
+import { optimizeImage, imageSrcSet, lineupText } from '../utils/filters.js'
 import { productPath } from '../utils/slug.js'
 
 const CARD_WIDTHS = [320, 480, 720, 960]
@@ -90,6 +90,7 @@ export default function ProductCard({ product, badge }) {
         </div>
         <h3>{product.name}</h3>
         <p className="note">{getDisplayNote(product)}</p>
+        {lineupText(product) && <p className="card-meta">{lineupText(product)}</p>}
       </Link>
       <div className="row">
         <span className="price">
