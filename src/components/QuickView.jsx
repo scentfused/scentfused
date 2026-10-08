@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useCart } from '../context/CartContext.jsx'
 import Icon from './Icon.jsx'
-import { firstAvailableVariant } from '../utils/stock.js'
-import { optimizeImage } from '../utils/filters.js'
+import { firstAvailableVariant, lowStockText } from '../utils/stock.js'
+import { useSite } from '../context/SiteContext.jsx'
+import { optimizeImage, lineupText } from '../utils/filters.js'
 
 function getDisplayNote(product) {
   if (product.note && product.note.trim()) return product.note
@@ -17,6 +18,7 @@ export default function QuickView() {
   const { quickViewProduct, setQuickViewProduct, addToCart } = useCart()
   const [selectedVariant, setSelectedVariant] = useState(null)
   const [qty, setQty] = useState(1)
+  const { lowStockThreshold } = useSite()
 
   if (!quickViewProduct) return null
 
@@ -25,6 +27,7 @@ export default function QuickView() {
   // Pre-select the first size that's still in stock.
   const activeVariant = selectedVariant || firstAvailableVariant(product)
   const activeSoldOut = Boolean(activeVariant && activeVariant.soldOut)
+  const lowText = lowStockText(activeVariant, lowStockThreshold)
 
   // Each variant can have its own sale price now — fall back to the
   // product-level values only when there's no variant at all.
@@ -62,6 +65,7 @@ export default function QuickView() {
         <div className="quickview-info">
           <h3>{product.name}</h3>
           <p className="note">{getDisplayNote(product)}</p>
+          {lineupText(product) && <p className="card-meta">{lineupText(product)}</p>}
           <p className="price">
             {showSale ? (
               <span className="price-stack">
@@ -92,6 +96,8 @@ export default function QuickView() {
               </div>
             </div>
           )}
+
+          {lowText && <p className="low-stock-note">{lowText}</p>}
 
           {activeSoldOut ? (
             <p className="soldout-note">This item is currently sold out.</p>
