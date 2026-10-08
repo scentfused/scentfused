@@ -1,3 +1,5 @@
+import { CATEGORIES } from '../data/catalog.js'
+
 // Everything about the shop filters lives here: the default option lists, how
 // they are saved, how products are matched against them, and how images are
 // resized. Admin -> Site Settings -> Filters edits these lists and the website
@@ -7,6 +9,8 @@
 // The groups an administrator can manage. `key` is also the product attribute
 // the group matches (for the 'notes' group it matches Top/Heart/Base notes).
 export const FILTER_GROUPS = [
+  { key: 'collection', label: 'Collection', help: 'Your line-ups, e.g. Marina or Royal. Also the Collection dropdown in the product form, and each one gets its own page under Line-ups in the menu.', defaultOn: true },
+  { key: 'gender', label: 'Gender', help: 'Also the Gender dropdown in the product form.', defaultOn: true },
   { key: 'notes', label: 'Notes', help: 'Words people can filter by, e.g. Oud, Rose, Vanilla. A perfume matches if any of its top, heart or base notes contains the word.', free: true, defaultOn: true },
   { key: 'season', label: 'Season', help: 'Also the Season checkboxes in the Add / Edit product form.', defaultOn: true },
   { key: 'occasion', label: 'Occasion', help: 'Also the Occasion checkboxes in the Add / Edit product form.', defaultOn: true },
@@ -17,6 +21,8 @@ export const FILTER_GROUPS = [
 
 export const DEFAULT_FILTER_OPTIONS = {
   lists: {
+    collection: [],
+    gender: ['Men', 'Women', 'Unisex'],
     notes: ['Oud', 'Rose', 'Vanilla', 'Amber', 'Musk', 'Sandalwood', 'Citrus', 'Jasmine'],
     season: ['Spring', 'Summer', 'Fall', 'Winter'],
     occasion: ['Casual', 'Office', 'Evening', 'Special'],
@@ -25,7 +31,7 @@ export const DEFAULT_FILTER_OPTIONS = {
     projection: ['Intimate', 'Moderate', 'Strong', 'Beast mode']
   },
   // Which groups appear as filters on the category pages.
-  enabled: { notes: true, season: true, occasion: true, concentration: false, lasting: false, projection: false },
+  enabled: { collection: true, gender: true, notes: true, season: true, occasion: true, concentration: false, lasting: false, projection: false },
   priceEnabled: true,
   // min is inclusive, max is exclusive. null = no limit.
   priceRanges: [
@@ -34,6 +40,12 @@ export const DEFAULT_FILTER_OPTIONS = {
     { label: 'Rs. 4,000 – 6,000', min: 4000, max: 6000 },
     { label: 'Rs. 6,000 and above', min: 6000, max: null }
   ]
+}
+
+// A–Z, ignoring capitals; numbers sort naturally (2 before 10).
+const collator = new Intl.Collator('en', { sensitivity: 'base', numeric: true })
+export function sortAZ(list) {
+  return list.slice().sort((a, b) => collator.compare(String(a), String(b)))
 }
 
 function cleanList(list) {
@@ -45,7 +57,7 @@ function cleanList(list) {
     seen.add(s.toLowerCase())
     out.push(s)
   })
-  return out
+  return sortAZ(out)
 }
 
 function cleanRange(r) {
@@ -73,7 +85,7 @@ export function normalizeFilterOptions(raw) {
   const src = raw && typeof raw === 'object' ? raw : {}
   const lists = {}
   FILTER_GROUPS.forEach((g) => {
-    lists[g.key] = Array.isArray(src.lists?.[g.key]) ? cleanList(src.lists[g.key]) : d.lists[g.key].slice()
+    lists[g.key] = Array.isArray(src.lists?.[g.key]) ? cleanList(src.lists[g.key]) : sortAZ(d.lists[g.key])
   })
   const enabled = {}
   FILTER_GROUPS.forEach((g) => {
@@ -82,6 +94,8 @@ export function normalizeFilterOptions(raw) {
   const priceRanges = Array.isArray(src.priceRanges)
     ? src.priceRanges.map(cleanRange).filter(Boolean)
     : d.priceRanges.map((r) => ({ ...r }))
+  // Price ranges go from cheapest to dearest (not A–Z).
+  priceRanges.sort((a, b) => (a.min ?? -1) - (b.min ?? -1) || (a.max ?? Infinity) - (b.max ?? Infinity))
   return {
     lists,
     enabled,
@@ -105,7 +119,42 @@ export function formOptions(filterOptions, fieldKey, fallback, currentValue) {
   current.forEach((v) => {
     if (v && !base.some((b) => b.toLowerCase() === String(v).toLowerCase())) base.push(v)
   })
-  return base
+  return sortAZ(base)
+}
+
+// ---------- collections (line-ups) ----------
+
+export function collectionSlug(name) {
+  return String(name || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+export function collectionOf(p) {
+  const v = p && p.attributes && p.attributes.collection
+  return typeof v === 'string' ? v.trim() : ''
+}
+
+// "Marina · Men" — the small line shown on cards and the quick view.
+export function lineupText(p) {
+  const g = p && p.attributes && typeof p.attributes.gender === 'string' ? p.attributes.gender.trim() : ''
+  return [collectionOf(p), g].filter(Boolean).join(' · ')
+}
+
+// The collections that exist (from the Filters list) and have at least one
+// product, A–Z: [{ name, slug, count }]
+export function activeCollections(products, filterOptions) {
+  const opts = normalizeFilterOptions(filterOptions)
+  const counts = new Map()
+  ;(products || []).forEach((p) => {
+    const c = collectionOf(p).toLowerCase()
+    if (c) counts.set(c, (counts.get(c) || 0) + 1)
+  })
+  return opts.lists.collection
+    .filter((name) => counts.has(name.toLowerCase()))
+    .map((name) => ({ name, slug: collectionSlug(name), count: counts.get(name.toLowerCase()) }))
 }
 
 // ---------- matching ----------
@@ -158,6 +207,11 @@ export function matchesSelection(p, selection, opts, skipKey) {
       ? chosen.some((w) => matchesNote(p, w))
       : chosen.some((w) => matchesValue(p, g.key, w))
     if (!ok) return false
+  }
+  // Only used on collection pages: filter by Perfumes / Attars / ...
+  if (skipKey !== 'category') {
+    const chosen = selection.category || []
+    if (chosen.length && !chosen.some((label) => CATEGORIES.find((c) => c.label === label)?.key === p.category)) return false
   }
   if (skipKey !== 'price') {
     const chosen = selection.price || []
