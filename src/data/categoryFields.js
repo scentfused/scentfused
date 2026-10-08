@@ -8,8 +8,16 @@
 // 'tags' (free-form tag chips — type a note, press Enter/comma to add it;
 // stored as an array of strings, useful later for filtering/suggestions)
 
+// Every category can belong to a collection (line-up) and have a gender. The
+// choices come from Admin -> Site Settings -> Filters.
+const LINEUP_FIELDS = [
+  { key: 'collection', label: 'Collection', type: 'select', options: [] },
+  { key: 'gender', label: 'Gender', type: 'select', options: ['Men', 'Women', 'Unisex'] }
+]
+
 export const CATEGORY_FIELDS = {
   perfumes: [
+    ...LINEUP_FIELDS,
     { key: 'topNotes', label: 'Top notes', type: 'tags' },
     { key: 'heartNotes', label: 'Heart notes', type: 'tags' },
     { key: 'baseNotes', label: 'Base notes', type: 'tags' },
@@ -20,14 +28,17 @@ export const CATEGORY_FIELDS = {
     { key: 'occasion', label: 'Occasion', type: 'multiselect', options: ['Casual', 'Office', 'Evening', 'Special'] }
   ],
   attars: [
+    ...LINEUP_FIELDS,
     { key: 'topNotes', label: 'Top notes', type: 'tags' },
     { key: 'heartNotes', label: 'Heart notes', type: 'tags' },
     { key: 'baseNotes', label: 'Base notes', type: 'tags' }
   ],
   soaps: [
+    ...LINEUP_FIELDS,
     { key: 'inspiredBy', label: 'Inspired by', type: 'text' }
   ],
   candles: [
+    ...LINEUP_FIELDS,
     { key: 'inspiredBy', label: 'Inspired by', type: 'text' }
   ]
 }
