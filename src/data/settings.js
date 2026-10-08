@@ -1,4 +1,4 @@
-export const FONT_OPTIONS = [
+const FONT_LIST = [
   'Audiowide',
   'Robot Monster',
   'Royale',
@@ -23,6 +23,9 @@ export const FONT_OPTIONS = [
   'Shanoy',
   'Soviet Style' */
 ]
+
+// Shown A–Z in every font dropdown.
+export const FONT_OPTIONS = FONT_LIST.slice().sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }))
 
 export const defaultSettings = {
   brandFont: 'Robot Monster',
@@ -51,5 +54,6 @@ export const defaultSettings = {
   // Checkout (Site Settings -> Checkout). See utils/checkout.js
   deliveryRates: null,
   paymentMethods: null,
-  whatsappNumber: ''
+  whatsappNumber: '',
+  lowStockThreshold: 5
 }
