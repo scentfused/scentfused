@@ -5,7 +5,8 @@ import { FILTER_GROUPS, SORTS, countFor } from '../utils/filters.js'
 // category's products, the options (managed in Admin -> Site Settings ->
 // Filters) and the current selection, and gets changes back through callbacks.
 export default function ProductFilters({
-  products, opts, selection, sort, onToggle, onClear, onSort, shown, total
+  products, opts, selection, sort, onToggle, onClear, onSort, shown, total,
+  hideGroups = [], categories = null
 }) {
   const [open, setOpen] = useState(
     () => typeof window !== 'undefined' && window.innerWidth >= 960
@@ -24,8 +25,16 @@ export default function ProductFilters({
 
   // Build the groups that are switched on and have something to show.
   const groups = []
+  // Collection pages also let shoppers narrow by Perfumes / Attars / ...
+  if (categories && categories.length > 1) {
+    const chosen = selection.category || []
+    const options = categories
+      .map((label) => ({ label, count: countFor(products, 'category', label, selection, opts) }))
+      .filter((o) => o.count > 0 || chosen.includes(o.label))
+    if (options.length) groups.push({ key: 'category', title: 'Category', options })
+  }
   FILTER_GROUPS.forEach((g) => {
-    if (!opts.enabled[g.key]) return
+    if (hideGroups.includes(g.key) || !opts.enabled[g.key]) return
     const chosen = selection[g.key] || []
     const options = opts.lists[g.key]
       .map((label) => ({ label, count: countFor(products, g.key, label, selection, opts) }))
