@@ -7,8 +7,9 @@ import Nav from '../components/Nav.jsx'
 import Footer from '../components/Footer.jsx'
 import Icon from '../components/Icon.jsx'
 import ProductCard from '../components/ProductCard.jsx'
-import { firstAvailableVariant } from '../utils/stock.js'
-import { optimizeImage, imageSrcSet } from '../utils/filters.js'
+import { firstAvailableVariant, lowStockText } from '../utils/stock.js'
+import { optimizeImage, imageSrcSet, collectionSlug } from '../utils/filters.js'
+import { useSite } from '../context/SiteContext.jsx'
 import { productPath, findProductByParam } from '../utils/slug.js'
 
 function getDisplayNote(product) {
@@ -23,6 +24,7 @@ function getDisplayNote(product) {
 export default function ProductPage({ products }) {
   const { id } = useParams()
   const { addToCart } = useCart()
+  const { lowStockThreshold } = useSite()
   const [selectedVariant, setSelectedVariant] = useState(null)
   const [qty, setQty] = useState(1)
   const [added, setAdded] = useState(false)
@@ -80,6 +82,7 @@ export default function ProductPage({ products }) {
   // Pre-select the first size that's still in stock.
   const activeVariant = selectedVariant || firstAvailableVariant(product)
   const activeSoldOut = Boolean(activeVariant && activeVariant.soldOut)
+  const lowText = lowStockText(activeVariant, lowStockThreshold)
 
   // Each variant can have its own sale price now — fall back to the
   // product-level values only when there's no variant at all.
@@ -180,7 +183,10 @@ export default function ProductPage({ products }) {
                 const display = Array.isArray(value) ? value.join(', ') : value
                 return (
                   <p key={field.key} className="product-page-detail-line">
-                    <strong>{field.label}:</strong> {display}
+                    <strong>{field.label}:</strong>{' '}
+                    {field.key === 'collection' && collectionSlug(display)
+                      ? <Link to={`/collection/${collectionSlug(display)}`}>{display}</Link>
+                      : display}
                   </p>
                 )
               })}
@@ -228,6 +234,7 @@ export default function ProductPage({ products }) {
           ) : null}
 
           {activeSoldOut && <p className="soldout-note">This item is currently sold out.</p>}
+          {lowText && <p className="low-stock-note">{lowText}</p>}
 
           <div className="product-page-buy-row">
             {!activeSoldOut && (
