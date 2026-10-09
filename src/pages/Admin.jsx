@@ -13,6 +13,7 @@ import FilterSettings from '../components/FilterSettings.jsx'
 import CheckoutSettings from '../components/CheckoutSettings.jsx'
 import OrdersPanel from '../components/OrdersPanel.jsx'
 import { formOptions, sortAZ, collectionOf } from '../utils/filters.js'
+import CollectionsPanel from '../components/CollectionsPanel.jsx'
 import StockPanel from '../components/StockPanel.jsx'
 import ArchivePanel from '../components/ArchivePanel.jsx'
 
@@ -1128,6 +1129,7 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
     { key: 'adInfographic', label: 'AI Ad Infographic Prompt' },
     { key: 'product', label: 'Add a Product' },
     { key: 'table', label: 'Products' },
+    { key: 'collections', label: 'Collections' },
     { key: 'stock', label: lowCount > 0 ? `Stock (${lowCount} low)` : 'Stock' },
     { key: 'archive', label: 'Archive', adminOnly: true },
     { key: 'activity', label: 'Activity Log', adminOnly: true }
@@ -1773,6 +1775,20 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                   </tbody>
                 </table>
                 </div>
+              </section>
+            )}
+
+            {/* ---------- Collections & gender ---------- */}
+            {activeSection === 'collections' && (
+              <section className="admin-panel">
+                <h2 className="admin-panel-title">Collections &amp; gender</h2>
+                <CollectionsPanel
+                  products={products}
+                  setProducts={setProducts}
+                  settings={settings}
+                  setSettings={setSettings}
+                  isAdmin={isAdmin}
+                />
               </section>
             )}
 
