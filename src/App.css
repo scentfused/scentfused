@@ -1260,3 +1260,11 @@ header.nav{width:100%;}
 .orders-delete { margin-top: 0.5rem; }
 .variant-row { flex-wrap: wrap; }
 .variant-row input { min-width: 90px; }
+/* ===== Admin: Collections tab ===== */
+.collections-layout { display: grid; grid-template-columns: minmax(200px, 280px) 1fr; gap: 1.5rem; margin-top: 1rem; }
+@media (max-width: 760px) { .collections-layout { grid-template-columns: 1fr; } }
+.collections-list ul, .collections-checklist { list-style: none; margin: 0.5rem 0; padding: 0; }
+.collections-item { display: flex; justify-content: space-between; width: 100%; padding: 0.5rem 0.75rem; margin-bottom: 0.3rem; background: transparent; border: 1px solid var(--hairline, #444); color: inherit; cursor: pointer; font: inherit; text-align: left; }
+.collections-item.is-on { border-color: var(--gold); background: rgba(212, 175, 55, 0.12); }
+.collections-checklist { max-height: 420px; overflow: auto; border: 1px solid var(--hairline, #444); padding: 0.5rem 0.75rem; }
+.collections-checklist label { display: flex; gap: 0.5rem; align-items: center; padding: 0.2rem 0; cursor: pointer; }
