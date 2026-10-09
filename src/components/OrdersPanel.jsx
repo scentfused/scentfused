@@ -122,7 +122,7 @@ export default function OrdersPanel({ onNewCount }) {
                   <td>{o.payment_method}{o.payment_ref ? ` · ${o.payment_ref}` : ''}</td>
                   <td>
                     <select value={o.status} onChange={(e) => setStatus(o, e.target.value)} aria-label={`Status of ${o.order_number}`}>
-                      {ORDER_STATUSES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+                      {[...ORDER_STATUSES].sort((x, y) => x.label.localeCompare(y.label)).map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
                     </select>
                   </td>
                 </tr>
