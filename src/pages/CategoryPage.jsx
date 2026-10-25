@@ -13,7 +13,7 @@ const GROUP_KEYS = [...FILTER_GROUPS.map((g) => g.key), 'price']
 
 // Normally one category (/perfumes). Pass `categoryKeys` + `title` + `blurb` to
 // show several categories together (/accessories = soaps + candles).
-export default function CategoryPage({ products, categoryKey, categoryKeys, title, blurb, filterOptions }) {
+export default function CategoryPage({ products, categoryKey, categoryKeys, title, blurb, sections, filterOptions }) {
   const keys = categoryKeys || [categoryKey]
   const base = CATEGORIES.find((c) => c.key === keys[0])
   const category = { label: title || base.label, blurb: blurb || base.blurb }
@@ -77,6 +77,7 @@ export default function CategoryPage({ products, categoryKey, categoryKeys, titl
           title={category.label}
           blurb={category.blurb}
           products={items}
+          sections={sections ? sections.map((s) => ({ key: s.key, title: s.title, products: items.filter(s.match) })) : undefined}
           toolbar={
             <ProductFilters
               products={all}
