@@ -35,6 +35,7 @@ export const CATEGORY_FIELDS = {
   ],
   soaps: [
     ...LINEUP_FIELDS,
+    { key: 'soapType', label: 'Type', type: 'select', options: ['Bodywash', 'Soap'] },
     { key: 'inspiredBy', label: 'Inspired by', type: 'text' }
   ],
   candles: [
