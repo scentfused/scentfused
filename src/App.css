@@ -1268,3 +1268,7 @@ header.nav{width:100%;}
 .collections-item.is-on { border-color: var(--gold); background: rgba(212, 175, 55, 0.12); }
 .collections-checklist { max-height: 420px; overflow: auto; border: 1px solid var(--hairline, #444); padding: 0.5rem 0.75rem; }
 .collections-checklist label { display: flex; gap: 0.5rem; align-items: center; padding: 0.2rem 0; cursor: pointer; }
+/* ===== Scented Accessories sections ===== */
+.shop-subsection { margin-top: 2.5rem; }
+.shop-subhead { font-family: var(--brand-font); color: var(--gold-bright); font-size: 1.4rem; margin: 0 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--gold); }
+.shop-subcount { font-size: 0.8rem; opacity: 0.7; margin-left: 0.5rem; font-family: inherit; }
