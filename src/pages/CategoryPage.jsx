@@ -11,12 +11,16 @@ import {
 
 const GROUP_KEYS = [...FILTER_GROUPS.map((g) => g.key), 'price']
 
-export default function CategoryPage({ products, categoryKey, filterOptions }) {
-  const category = CATEGORIES.find((c) => c.key === categoryKey)
+// Normally one category (/perfumes). Pass `categoryKeys` + `title` + `blurb` to
+// show several categories together (/accessories = soaps + candles).
+export default function CategoryPage({ products, categoryKey, categoryKeys, title, blurb, filterOptions }) {
+  const keys = categoryKeys || [categoryKey]
+  const base = CATEGORIES.find((c) => c.key === keys[0])
+  const category = { label: title || base.label, blurb: blurb || base.blurb }
   const opts = useMemo(() => normalizeFilterOptions(filterOptions), [filterOptions])
   const [params, setParams] = useSearchParams()
 
-  const all = useMemo(() => products.filter((p) => p.category === categoryKey), [products, categoryKey])
+  const all = useMemo(() => products.filter((p) => keys.includes(p.category)), [products, categoryKey, categoryKeys])
 
   // The selection lives in the web address (?season=Summer&sort=newest) so the
   // Back button from a product page returns to the same filtered list, and a
@@ -69,7 +73,7 @@ export default function CategoryPage({ products, categoryKey, filterOptions }) {
           <span>{category.label}</span>
         </div>
         <CategorySection
-          id={categoryKey}
+          id={keys.join('-')}
           title={category.label}
           blurb={category.blurb}
           products={items}
