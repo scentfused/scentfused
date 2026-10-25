@@ -15,6 +15,7 @@ import { defaultSettings } from './data/settings.js'
 import { normalizeFilterOptions, serializeFilterOptions, activeCollections } from './utils/filters.js'
 import { normalizeDeliveryRates, normalizePaymentMethods, normalizeWhatsapp } from './utils/checkout.js'
 import CheckoutPage from './pages/CheckoutPage.jsx'
+import { ACCESSORY_SECTIONS } from './utils/accessories.js'
 import CollectionPage from './pages/CollectionPage.jsx'
 import CollectionsPage from './pages/CollectionsPage.jsx'
 import { SiteContext } from './context/SiteContext.jsx'
@@ -241,7 +242,7 @@ export default function App() {
         ))}       
         <Route
           path="/accessories"
-          element={<CategoryPage products={shopProducts} categoryKeys={['candles', 'soaps']} title="Scented Accessories" blurb="Candles, soaps and body wash finished with the same notes as our perfumes." filterOptions={settings.filterOptions} />}
+          element={<CategoryPage products={shopProducts} categoryKeys={['candles', 'soaps']} title="Scented Accessories" sections={ACCESSORY_SECTIONS} blurb="Candles, soaps and body wash finished with the same notes as our perfumes." filterOptions={settings.filterOptions} />}
         />
         <Route path="/product/:id" element={<ProductPage products={shopProducts} />} />
         <Route path="/collections" element={<CollectionsPage />} />
