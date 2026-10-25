@@ -239,6 +239,10 @@ export default function App() {
             element={<CategoryPage products={shopProducts} categoryKey={cat.key} filterOptions={settings.filterOptions} />}
           />
         ))}       
+        <Route
+          path="/accessories"
+          element={<CategoryPage products={shopProducts} categoryKeys={['candles', 'soaps']} title="Scented Accessories" blurb="Candles, soaps and body wash finished with the same notes as our perfumes." filterOptions={settings.filterOptions} />}
+        />
         <Route path="/product/:id" element={<ProductPage products={shopProducts} />} />
         <Route path="/collections" element={<CollectionsPage />} />
         <Route path="/collection/:slug" element={<CollectionPage products={shopProducts} filterOptions={settings.filterOptions} />} />
