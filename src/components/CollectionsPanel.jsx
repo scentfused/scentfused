@@ -5,7 +5,9 @@ import { formOptions, normalizeFilterOptions, serializeFilterOptions, sortAZ } f
 
 const MODES = {
   collection: { label: 'Collection', plural: 'collections', key: 'collection', fallback: [] },
-  gender: { label: 'Gender', plural: 'genders', key: 'gender', fallback: ['Men', 'Women', 'Unisex'] }
+  gender: { label: 'Gender', plural: 'genders', key: 'gender', fallback: ['Men', 'Women', 'Unisex'] },
+  // Soaps only: decides whether a soap is listed under Scented Soaps or Scented Bodywash.
+  soapType: { label: 'Soap type', plural: 'soap types', key: 'soapType', fallback: ['Bodywash', 'Soap'], fixed: true, category: 'soaps' }
 }
 
 const valueOf = (p, key) => {
@@ -64,6 +66,7 @@ export default function CollectionsPanel({ products, setProducts, settings, setS
   function switchMode(next) {
     if (dirty && !window.confirm('You have unsaved ticks. Switch anyway and lose them?')) return
     setMode(next)
+    setCategory(MODES[next].category || 'all')
     setChosen('')
     setTicked(null)
     setMessage({ kind: '', text: '' })
@@ -132,7 +135,7 @@ export default function CollectionsPanel({ products, setProducts, settings, setS
     <div className="collections-panel">
       <p className="settings-help">
         Choose a {m.label.toLowerCase()}, tick the products that belong to it, then press Save.
-        A product can be in one collection and have one gender.
+        A product can be in one collection and have one gender. "Soap type" decides whether a soap is shown under Scented Soaps or Scented Bodywash (soaps with no type count as Soap).
       </p>
 
       <div className="orders-filters" role="tablist" aria-label="What to assign">
@@ -143,7 +146,7 @@ export default function CollectionsPanel({ products, setProducts, settings, setS
 
       <div className="collections-layout">
         <div className="collections-list">
-          <h4>{m.label === 'Collection' ? 'Your collections' : 'Genders'}</h4>
+          <h4>{m.label === 'Collection' ? 'Your collections' : m.label === 'Gender' ? 'Genders' : 'Soap types'}</h4>
           <ul>
             {options.map((o) => (
               <li key={o}>
@@ -154,7 +157,7 @@ export default function CollectionsPanel({ products, setProducts, settings, setS
             ))}
             {options.length === 0 && <li className="muted">None yet.</li>}
           </ul>
-          {isAdmin && (
+          {isAdmin && !m.fixed && (
             <div className="filter-add-row">
               <input
                 type="text"
