@@ -55,5 +55,7 @@ export const defaultSettings = {
   deliveryRates: null,
   paymentMethods: null,
   whatsappNumber: '',
-  lowStockThreshold: 5
+  lowStockThreshold: 5,
+  heroVideos: [],
+  heroAnimation: true
 }
