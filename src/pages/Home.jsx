@@ -16,7 +16,7 @@ export default function Home({ products, settings }) {
     <div>
       <Nav />
       <main>
-       <Hero heroImage={settings.heroImage} />
+       <Hero heroImage={settings.heroImage} videos={settings.heroVideos} animated={settings.heroAnimation !== false} />
          <PromoBanners
           banner1Image={settings.promoBanner1Image}
           banner2Image={settings.promoBanner2Image}
