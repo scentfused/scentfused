@@ -13,6 +13,7 @@ import FilterSettings from '../components/FilterSettings.jsx'
 import CheckoutSettings from '../components/CheckoutSettings.jsx'
 import OrdersPanel from '../components/OrdersPanel.jsx'
 import { formOptions, sortAZ, collectionOf } from '../utils/filters.js'
+import HeroVideoSettings from '../components/HeroVideoSettings.jsx'
 import CollectionsPanel from '../components/CollectionsPanel.jsx'
 import StockPanel from '../components/StockPanel.jsx'
 import ArchivePanel from '../components/ArchivePanel.jsx'
@@ -1270,6 +1271,8 @@ Lighting: dramatic warm golden lighting with rim light on the bottle, glossy ref
                         </button>
                       </div>
                     )}
+
+                    <HeroVideoSettings settings={settings} setSettings={setSettings} />
 
                     <label className="admin-form-wide" style={{ marginTop: '20px' }}>
                       Royal Collection banner photo
