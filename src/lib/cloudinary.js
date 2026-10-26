@@ -30,3 +30,22 @@ export async function uploadImageToCloudinary(file) {
   const data = await res.json()
   return data.secure_url
 }
+
+/**
+ * Uploads a video File (for the home page hero) and returns its hosted URL.
+ */
+export async function uploadVideoToCloudinary(file) {
+  if (!CLOUD_NAME || !UPLOAD_PRESET) {
+    throw new Error('Missing Cloudinary env vars.')
+  }
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('upload_preset', UPLOAD_PRESET)
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`, { method: 'POST', body: formData })
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '')
+    throw new Error(`Cloudinary video upload failed: ${res.status} ${detail}`)
+  }
+  const data = await res.json()
+  return data.secure_url
+}
