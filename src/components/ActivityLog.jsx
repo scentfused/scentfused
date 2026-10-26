@@ -24,6 +24,8 @@ const FIELD_LABELS = {
   show_new_badge: '"New" badge',
   carousel_autoplay: 'carousel autoplay',
   hero_image: 'hero image',
+  hero_videos: 'hero videos',
+  hero_animation: 'hero animation',
   carousel_product_ids: 'carousel products',
   promo_banner_1_image: 'Royal banner image',
   promo_banner_2_image: 'Marina banner image',
