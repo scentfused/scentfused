@@ -15,6 +15,7 @@ import { defaultSettings } from './data/settings.js'
 import { normalizeFilterOptions, serializeFilterOptions, activeCollections } from './utils/filters.js'
 import { normalizeDeliveryRates, normalizePaymentMethods, normalizeWhatsapp } from './utils/checkout.js'
 import CheckoutPage from './pages/CheckoutPage.jsx'
+import { normalizeHeroVideos } from './utils/hero.js'
 import { ACCESSORY_SECTIONS } from './utils/accessories.js'
 import CollectionPage from './pages/CollectionPage.jsx'
 import CollectionsPage from './pages/CollectionsPage.jsx'
@@ -128,6 +129,8 @@ export default function App() {
           paymentMethods: normalizePaymentMethods(settingsRes.data.payment_methods),
           whatsappNumber: normalizeWhatsapp(settingsRes.data.whatsapp_number),
           lowStockThreshold: normalizeThreshold(settingsRes.data.low_stock_threshold),
+          heroVideos: normalizeHeroVideos(settingsRes.data.hero_videos),
+          heroAnimation: settingsRes.data.hero_animation !== false,
           ...rowToSettings(settingsRes.data)
         })
       }
@@ -204,6 +207,12 @@ export default function App() {
           : {}),
         ...(next.whatsappNumber !== settings.whatsappNumber
           ? { whatsapp_number: normalizeWhatsapp(next.whatsappNumber) }
+          : {}),
+        ...(next.heroAnimation !== settings.heroAnimation
+          ? { hero_animation: next.heroAnimation !== false }
+          : {}),
+        ...(next.heroVideos !== settings.heroVideos
+          ? { hero_videos: normalizeHeroVideos(next.heroVideos) }
           : {}),
         ...(next.lowStockThreshold !== settings.lowStockThreshold
           ? { low_stock_threshold: normalizeThreshold(next.lowStockThreshold) }
